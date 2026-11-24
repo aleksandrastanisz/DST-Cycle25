@@ -348,6 +348,7 @@ Conclusions apply to: Dst forecasts at horizons of 1 h and 6 h, the OMNI and Kyo
 | 2026-11-24 | New row in §11 (asymmetric calibration-sample size in H2) and experiment S7 in §9 | Post-freeze review: M9 and the test use quantiles from samples of different size | Exploratory; H2 rule unchanged; added before any training |
 | 2026-11-24 | Sentence in §12 on the models not being retrained on cycle 24 data | Post-freeze review: scope of H1 conclusions | None; clarifies the scope of conclusions |
 | 2026-11-24 | Release of version 1.1 (tag `protocol-v1.1`, new archive version on Zenodo) | Collecting the post-freeze review changes into one archived version, before the first training run | None |
+| 2026-11-24 | Zenodo DOI of version 1.1 added to §14 | Public, immutable timestamp of version 1.1 | None |
 
 Changes made before freezing are visible in the Git history. Any use of test data before the final evaluation, including in code tests, is disclosed in this table, even if no model was evaluated on it.
 
@@ -362,7 +363,7 @@ Changes made before freezing are visible in the Git history. Any use of test dat
 - Every run records the commit and an uncommitted-changes flag at start. E-main and ablation runs are launched only from a clean repository.
 - XGBoost on CPU is reproducible with the same seed; LSTM training on GPU is not bitwise reproducible (X4 measures the scale of differences).
 - `scripts/make_tables.py` regenerates every table and figure from saved forecasts, without manual steps.
-- The frozen protocol with the code is archived on Zenodo at freezing; the results of the steps planned after freezing (§15), including R0 and P0, go into a later version of the archive, before any evaluation on the test split. Version `protocol-v1.0`: [10.5281/zenodo.24511114](https://doi.org/10.5281/zenodo.24511114); version `protocol-v1.1`: DOI added after release; all versions: [10.5281/zenodo.24511113](https://doi.org/10.5281/zenodo.24511113).
+- The frozen protocol with the code is archived on Zenodo at freezing; the results of the steps planned after freezing (§15), including R0 and P0, go into a later version of the archive, before any evaluation on the test split. Version `protocol-v1.0`: [10.5281/zenodo.24511114](https://doi.org/10.5281/zenodo.24511114); version `protocol-v1.1`: [10.5281/zenodo.24511920](https://doi.org/10.5281/zenodo.24511920); all versions: [10.5281/zenodo.24511113](https://doi.org/10.5281/zenodo.24511113).
 
 ## 15. Decisions prior to freezing (resolved)
 
