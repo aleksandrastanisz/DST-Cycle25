@@ -1,6 +1,6 @@
 # PROTOCOL: Dst forecasts and uncertainty-interval coverage during storms of solar cycle 25
 
-**Version:** 0.4 (draft, not frozen), 2026-11-24
+**Version:** 0.5 (draft, not frozen), 2026-11-24
 
 **Status:** draft. The protocol is frozen once the open items in §15 are closed, before the first training run. After freezing, any modification requires an entry in §13 (date, reason, impact).
 
@@ -72,7 +72,7 @@ Directional predictions, **exploratory** (no multiple-comparison correction, rep
 | Dst | [Kyoto WDC](https://wdc.kugi.kyoto-u.ac.jp/dstdir/) via HAPI, dataset `hour_dst` | 1 h | version recorded for every hour |
 | Dst in OMNI | OMNI2, column 41 | 1 h | used only to check hour alignment (§5.2) |
 
-**Dst versions** according to the Kyoto page (as of 2026-11-24): final 1957–2020, provisional 2021/01–2025/06, real-time only afterwards. The download script reads these ranges from the page at download time and saves a copy of it.
+**Dst versions** come from the version code (`versionCode`) that the Kyoto HAPI server returns for every hour: 2x final, 1x provisional, 0x real-time. The `hour_dst` dataset serves the highest available version for each period. State at download (2026-11-24): final up to the end of 2020, provisional throughout 2021–2025. The script stops if train or calib contains any version other than final; version counts for each split are in `MANIFEST.json`.
 
 ### 5.2 Time convention
 
@@ -83,13 +83,13 @@ Directional predictions, **exploratory** (no multiple-comparison correction, rep
 
 ### 5.3 Splits (finite, frozen, on disk)
 
-Data are downloaded once by `scripts/download_data.py`. The download date, Dst version ranges, hour offset and SHA-256 checksums of all files are stored in `data/MANIFEST.json`.
+Data are downloaded once by `scripts/download_data.py`. The download date, Dst version counts per split, hour offset and SHA-256 checksums of all files are stored in `data/MANIFEST.json`.
 
 | Split | Period (UTC) | Cycle (approx.) | Dst version | File | Use |
 |---|---|---|---|---|---|
 | train | 1995-01-01 – 2009-12-31 | 23 | final | `data/processed/train.parquet` | training and tuning (§7.2) |
 | calib | 2010-01-01 – 2019-12-31 | 24 | final | `data/processed/calib.parquet` | conformal quantiles, warm-up of adaptive methods, M9 reference, power analysis; no model selection |
-| test | 2020-01-01 – 2025-06-30 | 25 | final (2020), provisional (2021 – Jun 2025) | `data/sealed/test.parquet` | single final evaluation |
+| test | 2020-01-01 – 2025-12-31 | 25 | final (2020), provisional (2021–2025) | `data/sealed/test.parquet` | single final evaluation |
 
 Split boundaries are calendar dates, not exact cycle boundaries: train also contains the tail of cycle 22 (1995–1996), and cycle 24 began in late 2008. Each stage nevertheless covers mainly one cycle. Calibrating on all of cycle 24, rather than on 2015–2019, ensures storms from different phases of the cycle.
 
@@ -215,7 +215,7 @@ M1–M5 are also reported separately for storm phases (§6, item 6).
 | S5 | P and X on all hours for which they themselves produce a forecast (XGBoost handles missing values) | sensitivity to missing-data exclusions |
 | S6 | leave-one-storm-out: every confirmatory statistic recomputed without each intense-storm window in turn | stability of decisions |
 | X1 | storms of 10–11 May and 10–11 October 2024: M2, M4 and M8 | exploratory, descriptive only |
-| X2 | models frozen after E-main, evaluated on real-time Dst, 2025-07-01 – 2025-12-31 | exploratory; closer to operational conditions |
+| X2 | M1–M3 for all models and interval methods, separately for 2020 (final Dst) and 2021–2025 (provisional Dst) | exploratory; effect of the label version (§3, item 1) |
 | X3 | H1–H3 counterparts for the extreme category | descriptive only |
 | X4 | one repeat of training L (seed 42, both horizons) with the same configuration | scale of run-to-run noise from GPU nondeterminism; descriptive only |
 | A1 | X and L without any Dst inputs (X without the "ring-current state" group, L without the Dst channel) | ablation: whether the advantage over persistence comes from the solar wind or from extending current Dst |
@@ -288,7 +288,7 @@ On cycle 24, with models trained on train: resample with replacement as many int
 
 | Threat | Mitigation |
 |---|---|
-| Different Dst versions in training and test | Stated in §3; X2 on real-time data as a check; re-evaluation once final Dst is published (out of scope) |
+| Different Dst versions in training and test | Stated in §3; X2 compares the year with final Dst against the years with provisional Dst; re-evaluation once final Dst is published (out of scope) |
 | OMNI data processed after the fact | Scope of conclusions (§12) |
 | Leakage through an hour offset | Alignment check on 1995–2014 (§5.2) and feature causality test (§14) |
 | Non-causal features or transformations fitted on all data | Causality test for every feature (§14); transformations fitted on train only; R0 checks (§9.1) |
@@ -312,7 +312,7 @@ On cycle 24, with models trained on train: resample with replacement as many int
 
 ## 12. Scope of conclusions
 
-Conclusions apply to: Dst forecasts at horizons of 1 h and 6 h, the OMNI and Kyoto data in §5, models P, E, X and L built in this project, trained on 1995–2009 and evaluated on 2020 – June 2025, the interval methods in §2, and the storm definitions in §6. They **do not apply** to operational forecasting from real-time L1 data, other indices (SYM-H, Kp), longer horizons, or models not listed in §2. X2 gives only an indication of operational conditions. Conclusions about extreme storms (≤ −250 nT) are descriptive.
+Conclusions apply to: Dst forecasts at horizons of 1 h and 6 h, the OMNI and Kyoto data in §5, models P, E, X and L built in this project, trained on 1995–2009 and evaluated on 2020–2025, the interval methods in §2, and the storm definitions in §6. They **do not apply** to operational forecasting from real-time L1 data, other indices (SYM-H, Kp), longer horizons, or models not listed in §2. Conclusions about extreme storms (≤ −250 nT) are descriptive.
 
 **Comparison with the literature** (e.g. Sandu and Beșliu-Ionescu 2026, Yu et al. 2026) is descriptive only and takes place in the discussion, after the final evaluation. Differences in test periods, Dst versions and metrics mean the numbers are not directly comparable; it does not affect any decision.
 
@@ -320,13 +320,13 @@ Conclusions apply to: Dst forecasts at horizons of 1 h and 6 h, the OMNI and Kyo
 
 | Date | What changed | Reason | Impact on analysis |
 |---|---|---|---|
-| | | | |
+| 2026-11-24 | Disclosure (before freezing): while checking the format of the downloaded Kyoto files, the first and last rows of the 2020, 2021, 2024 and 2025 files (8 hourly Dst values in total) and the counts of version codes in those years were displayed | Transparency | Negligible; no model was evaluated, and storm definitions, rules and thresholds do not depend on these values |
 
 Changes made before freezing are visible in the Git history. Any use of test data before the final evaluation, including in code tests, is disclosed in this table, even if no model was evaluated on it.
 
 ## 14. Reproducibility
 
-- Data: `scripts/download_data.py`, run once; `data/MANIFEST.json` with download date, URLs, Dst version ranges, hour offset, package versions and SHA-256 checksums.
+- Data: `scripts/download_data.py`, run once; `data/MANIFEST.json` with download date, URLs, Dst version counts per split, hour offset, package versions and SHA-256 checksums.
 - All model, interval and bootstrap parameters in `configs/*.yaml`. The report includes the config and commit hashes.
 - Automated tests: OMNI parser and fill values, hour alignment, split disjointness, storm-window definition on synthetic data, causality of every feature (changing data after time t does not change the feature at time t), feedback delay in C-ACI and C-DtACI, agreement of the C-DtACI implementation with an example from Gibbs and Candès.
 - The final evaluation script refuses to run if the SHA-256 of `data/sealed/test.parquet` does not match `MANIFEST.json` or the commit lacks the `protocol-v1.0` tag.
@@ -341,7 +341,7 @@ Changes made before freezing are visible in the Git history. Any use of test dat
 **Resolved:**
 
 - **Horizons:** 1 h and 6 h with equal weight, with Holm correction over 4 tests per family.
-- **Split:** mainly by cycles 23 / 24 / 25 (§5.3); the test period ends with the last month of provisional Dst (June 2025).
+- **Split:** mainly by cycles 23 / 24 / 25 (§5.3); the test period covers 2020–2025, entirely final or provisional (change from version 0.4, where the test period ended in June 2025 according to the Kyoto page; the HAPI version codes showed that all of 2025 is already provisional).
 - **Nominal level:** 90%, because it yields more out-of-interval cases during storms than 95%, and therefore more power.
 - **Unit of analysis:** storm window or quiet block; equal weighting of units.
 - **Confirmatory methods:** C-Mond (H2) and C-DtACI (H3). C-split is not tested, because it does not promise conditional coverage (change from version 0.1).

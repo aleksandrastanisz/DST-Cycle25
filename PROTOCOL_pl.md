@@ -1,6 +1,6 @@
 # PROTOCOL: prognozy Dst i pokrycie przedziałów niepewności w burzach 25. cyklu Słońca
 
-**Wersja:** 0.4 (szkic, niezamrożony), 2026-11-24
+**Wersja:** 0.5 (szkic, niezamrożony), 2026-11-24
 
 **Status:** szkic. Zamrożenie następuje po zamknięciu punktów otwartych z §15, przed pierwszym treningiem. Od zamrożenia każda zmiana wymaga wpisu w §13 (data, powód, wpływ).
 
@@ -72,7 +72,7 @@ Przewidywania kierunkowe, **eksploracyjne** (bez korekty wielokrotnych porówna�
 | Dst | [Kyoto WDC](https://wdc.kugi.kyoto-u.ac.jp/dstdir/) przez HAPI, dataset `hour_dst` | 1 h | wersja zapisana dla każdej godziny |
 | Dst w OMNI | OMNI2, kolumna 41 | 1 h | tylko do sprawdzenia wyrównania godzin (§5.2) |
 
-**Wersje Dst** według strony Kyoto (stan na 2026-11-24): ostateczny 1957–2020, wstępny 2021/01–2025/06, później tylko czas rzeczywisty. Skrypt odczytuje te zakresy ze strony w chwili pobrania i zapisuje jej kopię.
+**Wersje Dst** pochodzą z kodu wersji (`versionCode`), który HAPI Kyoto zwraca dla każdej godziny: 2x ostateczna, 1x wstępna, 0x czas rzeczywisty. Zbiór `hour_dst` podaje dla każdego okresu najwyższą dostępną wersję. Stan w chwili pobrania (2026-11-24): ostateczna do końca 2020, wstępna przez cały okres 2021–2025. Skrypt przerywa działanie, jeśli train lub calib zawiera wersję inną niż ostateczna; liczności wersji w każdym zbiorze są w `MANIFEST.json`.
 
 ### 5.2 Konwencja czasu
 
@@ -83,13 +83,13 @@ Przewidywania kierunkowe, **eksploracyjne** (bez korekty wielokrotnych porówna�
 
 ### 5.3 Podziały (skończone, zamrożone, na dysku)
 
-Dane pobiera raz `scripts/download_data.py`. Data pobrania, zakresy wersji Dst, przesunięcie godzin i sumy SHA-256 wszystkich plików są zapisane w `data/MANIFEST.json`.
+Dane pobiera raz `scripts/download_data.py`. Data pobrania, liczności wersji Dst w każdym zbiorze, przesunięcie godzin i sumy SHA-256 wszystkich plików są zapisane w `data/MANIFEST.json`.
 
 | Zbiór | Okres (UTC) | Cykl (w przybliżeniu) | Wersja Dst | Plik | Użycie |
 |---|---|---|---|---|---|
 | train | 1995-01-01 – 2009-12-31 | 23 | ostateczna | `data/processed/train.parquet` | trening i strojenie (§7.2) |
 | calib | 2010-01-01 – 2019-12-31 | 24 | ostateczna | `data/processed/calib.parquet` | kwantyle konformalne, rozgrzanie metod adaptacyjnych, odniesienie M9, analiza mocy; bez wyboru modeli |
-| test | 2020-01-01 – 2025-06-30 | 25 | ostateczna (2020), wstępna (2021 – VI 2025) | `data/sealed/test.parquet` | jednorazowa ocena końcowa |
+| test | 2020-01-01 – 2025-12-31 | 25 | ostateczna (2020), wstępna (2021–2025) | `data/sealed/test.parquet` | jednorazowa ocena końcowa |
 
 Granice zbiorów są datami kalendarzowymi, a nie dokładnymi granicami cykli: train zawiera też koniec 22. cyklu (1995–1996), a 24. cykl zaczął się pod koniec 2008 roku. Każdy etap obejmuje jednak głównie jeden cykl. Kalibracja na całym 24. cyklu, a nie na latach 2015–2019, ma zapewnić burze w różnych fazach cyklu.
 
@@ -215,7 +215,7 @@ M1–M5 raportujemy także osobno dla faz burzy (§6, pkt 6).
 | S5 | P i X na wszystkich godzinach, w których same mają prognozę (XGBoost obsługuje braki) | czułość na wyłączenia z powodu braków danych |
 | S6 | „zostaw jedną burzę”: każda statystyka konfirmacyjna liczona bez każdego okna burzy silnej po kolei | stabilność rozstrzygnięć |
 | X1 | burze z 10–11 maja i 10–11 października 2024: M2, M4 i M8 | eksploracyjny, wyłącznie opisowo |
-| X2 | modele zamrożone po E-main, ocenione na Dst w czasie rzeczywistym, 2025-07-01 – 2025-12-31 | eksploracyjny; bliżej warunków operacyjnych |
+| X2 | M1–M3 dla wszystkich modeli i metod przedziałów, osobno dla 2020 (Dst ostateczny) i 2021–2025 (Dst wstępny) | eksploracyjny; wpływ wersji etykiet (§3, pkt 1) |
 | X3 | odpowiedniki H1–H3 dla kategorii ekstremalnej | wyłącznie opisowo |
 | X4 | jedno powtórzenie treningu L (seed 42, oba horyzonty) z tą samą konfiguracją | skala szumu między przebiegami z niedeterminizmu GPU; wyłącznie opisowo |
 | A1 | X i L bez żadnych wejść z Dst (X bez grupy „stan prądu pierścieniowego”, L bez kanału Dst) | ablacja: czy przewaga nad persystencją pochodzi z wiatru słonecznego, czy z przedłużania bieżącego Dst |
@@ -288,7 +288,7 @@ Na 24. cyklu, z modelami trenowanymi na train: losujemy ze zwracaniem tyle okien
 
 | Zagrożenie | Postępowanie |
 |---|---|
-| Różne wersje Dst w treningu i teście | Nazwane w §3; X2 na danych czasu rzeczywistego jako kontrola; ponowna ocena po publikacji Dst ostatecznego (poza zakresem) |
+| Różne wersje Dst w treningu i teście | Nazwane w §3; X2 porównuje rok z wersją ostateczną z latami z wersją wstępną; ponowna ocena po publikacji Dst ostatecznego (poza zakresem) |
 | Dane OMNI przetworzone po fakcie | Zakres wniosków (§12) |
 | Wyciek przez przesunięcie godzin | Sprawdzenie wyrównania na latach 1995–2014 (§5.2) i test przyczynowości cech (§14) |
 | Cechy nieprzyczynowe lub przekształcenia dopasowane na wszystkich danych | Test przyczynowości każdej cechy (§14); przekształcenia uczone tylko na train; kontrole R0 (§9.1) |
@@ -312,7 +312,7 @@ Na 24. cyklu, z modelami trenowanymi na train: losujemy ze zwracaniem tyle okien
 
 ## 12. Zakres wniosków
 
-Wnioski dotyczą: prognoz Dst z horyzontem 1 h i 6 h, danych OMNI i Kyoto z §5, modeli P, E, X i L zbudowanych w tym projekcie, wytrenowanych na latach 1995–2009 i ocenionych na latach 2020 – czerwiec 2025, metod przedziałów z §2 oraz definicji burz z §6. **Nie dotyczą** prognozy operacyjnej na danych z L1 w czasie rzeczywistym, innych indeksów (SYM-H, Kp), dłuższych horyzontów ani modeli niewymienionych w §2. X2 daje tylko wskazówkę co do warunków operacyjnych. Wnioski o burzach ekstremalnych (≤ −250 nT) są opisowe.
+Wnioski dotyczą: prognoz Dst z horyzontem 1 h i 6 h, danych OMNI i Kyoto z §5, modeli P, E, X i L zbudowanych w tym projekcie, wytrenowanych na latach 1995–2009 i ocenionych na latach 2020–2025, metod przedziałów z §2 oraz definicji burz z §6. **Nie dotyczą** prognozy operacyjnej na danych z L1 w czasie rzeczywistym, innych indeksów (SYM-H, Kp), dłuższych horyzontów ani modeli niewymienionych w §2. Wnioski o burzach ekstremalnych (≤ −250 nT) są opisowe.
 
 **Porównanie z literaturą** (m.in. Sandu i Beșliu-Ionescu 2026, Yu i in. 2026) jest wyłącznie opisowe i odbywa się w dyskusji, po ocenie końcowej. Różnice w okresach testowych, wersjach Dst i metrykach sprawiają, że liczby nie są bezpośrednio porównywalne; nie wpływa ono na żadne rozstrzygnięcie.
 
@@ -320,13 +320,13 @@ Wnioski dotyczą: prognoz Dst z horyzontem 1 h i 6 h, danych OMNI i Kyoto z §5,
 
 | Data | Co zmieniono | Powód | Wpływ na analizę |
 |---|---|---|---|
-| | | | |
+| 2026-11-24 | Ujawnienie (przed zamrożeniem): przy sprawdzaniu formatu pobranych plików Kyoto wyświetlono pierwsze i ostatnie wiersze plików z lat 2020, 2021, 2024 i 2025 (łącznie 8 godzinowych wartości Dst) oraz liczności kodów wersji w tych latach | Przejrzystość | Znikomy; żaden model nie był oceniany, definicje burz, reguły i progi nie zależą od tych wartości |
 
 Zmiany przed zamrożeniem są widoczne w historii Git. Każde użycie danych testowych przed oceną końcową, także w testach kodu, jest ujawniane w tej tabeli, nawet gdy żaden model nie był na nich oceniany.
 
 ## 14. Reprodukowalność
 
-- Dane: `scripts/download_data.py`, uruchamiany raz; `data/MANIFEST.json` z datą pobrania, adresami, zakresami wersji Dst, przesunięciem godzin, wersjami pakietów i sumami SHA-256.
+- Dane: `scripts/download_data.py`, uruchamiany raz; `data/MANIFEST.json` z datą pobrania, adresami, licznościami wersji Dst w każdym zbiorze, przesunięciem godzin, wersjami pakietów i sumami SHA-256.
 - Wszystkie parametry modeli, przedziałów i bootstrapu w `configs/*.yaml`. Raport zawiera hash konfiguracji i commita.
 - Testy automatyczne: parser OMNI i wartości braku, wyrównanie godzin, rozłączność podziałów, definicja okien burz na danych syntetycznych, przyczynowość każdej cechy (zmiana danych po chwili t nie zmienia cechy w chwili t), opóźnienie informacji zwrotnej w C-ACI i C-DtACI, zgodność implementacji C-DtACI z przykładem z pracy Gibbsa i Candèsa.
 - Skrypt oceny końcowej odmawia działania, jeśli suma SHA-256 pliku `data/sealed/test.parquet` nie zgadza się z `MANIFEST.json` albo commit nie ma tagu `protocol-v1.0`.
@@ -341,7 +341,7 @@ Zmiany przed zamrożeniem są widoczne w historii Git. Każde użycie danych tes
 **Rozstrzygnięte:**
 
 - **Horyzonty:** 1 h i 6 h równorzędnie, z korektą Holma na 4 testy w rodzinie.
-- **Podział:** głównie cyklami 23 / 24 / 25 (§5.3); test kończy się na ostatnim miesiącu Dst wstępnego (czerwiec 2025).
+- **Podział:** głównie cyklami 23 / 24 / 25 (§5.3); test obejmuje lata 2020–2025, w całości w wersji ostatecznej lub wstępnej (zmiana z wersji 0.4, w której test kończył się w czerwcu 2025 według strony Kyoto; kody wersji z HAPI pokazały, że cały 2025 jest już w wersji wstępnej).
 - **Poziom nominalny:** 90%, bo daje więcej przypadków poza przedziałem w burzach niż 95%, a więc większą moc.
 - **Jednostka analizy:** okno burzy lub blok spokojny; agregacja z równą wagą jednostek.
 - **Metody konfirmacyjne:** C-Mond (H2) i C-DtACI (H3). C-split nie jest testowany, bo nie obiecuje pokrycia warunkowego (zmiana z wersji 0.1).

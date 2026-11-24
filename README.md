@@ -1,33 +1,33 @@
 # DST-Cycle25
 
-Czy prognozy indeksu Dst z modeli ML wnoszą coś ponad persystencję w czasie silnych burz 25. cyklu Słońca i czy metody przedziałów niepewności, które starają się utrzymać pokrycie w burzach, zachowują je na cyklu, którego nie widziały?
+Do machine-learning forecasts of the Dst index add anything beyond persistence during intense storms of solar cycle 25, and do uncertainty-interval methods that aim to maintain coverage during storms keep it on a cycle they have not seen?
 
-Modele są trenowane na latach 1995–2009 (głównie 23. cykl), przedziały konformalne kalibrowane na latach 2010–2019 (24. cykl), a ocena odbywa się raz, według zamrożonego protokołu, na 25. cyklu (styczeń 2020 – czerwiec 2025).
+Models are trained on 1995–2009 (mainly solar cycle 23), conformal intervals are calibrated on 2010–2019 (cycle 24), and evaluation happens once, under a frozen protocol, on cycle 25 (2020–2025).
 
-**Status:** protokół w wersji 0.4 (szkic, niezamrożony); żaden model nie był jeszcze trenowany ani oceniany na danych testowych.
+**Status:** protocol version 0.5 (draft, not frozen); no model has been trained yet or evaluated on test data.
 
-## Protokół
+## Protocol
 
-Pełny plan badania, z hipotezami, regułami decyzyjnymi i dziennikiem odstępstw: [PROTOCOL_pl.md](PROTOCOL_pl.md) · [PROTOCOL_en.md](PROTOCOL_en.md).
+The full study plan, with hypotheses, decision rules and a deviations log: [PROTOCOL_en.md](PROTOCOL_en.md) · [PROTOCOL_pl.md](PROTOCOL_pl.md) (Polish).
 
-W skrócie:
+In short:
 
-- **Modele:** persystencja, model empiryczny O'Briena i McPherrona, XGBoost na cechach fizycznych i LSTM; horyzonty 1 h i 6 h.
-- **Niepewność:** predykcja konformalna zwykła, Mondrian i adaptacyjna (DtACI), poziom nominalny 90%.
-- **Hipotezy:** H1 – przewaga ML nad persystencją maleje w silnych burzach; H2 – pokrycie Mondriana spada w burzach nowego cyklu; H3 – metoda adaptacyjna je odzyskuje.
-- **Statystyka:** jednostką jest burza, nie godzina; bootstrap po burzach, korekta Holma, progi praktyczne ustalone z góry.
+- **Models:** persistence, the O'Brien–McPherron empirical model, XGBoost on physical features and an LSTM; horizons of 1 h and 6 h.
+- **Uncertainty:** split, Mondrian and adaptive (DtACI) conformal prediction at a nominal 90% level.
+- **Hypotheses:** H1 – the ML advantage over persistence shrinks in intense storms; H2 – Mondrian coverage drops during storms of the new cycle; H3 – the adaptive method restores it.
+- **Statistics:** the unit of analysis is a storm, not an hour; storm-level bootstrap, Holm correction and practical thresholds fixed in advance.
 
-## Uruchomienie
+## Usage
 
 ```bash
 pip install -r requirements.txt
-python -m pytest              # testy logiki pobierania, bez sieci
+python -m pytest              # tests of the download logic, no network needed
 python scripts/download_data.py
 ```
 
-Skrypt pobiera dane raz i zapisuje `data/MANIFEST.json` z datą pobrania, zakresami wersji Dst z Kyoto i sumami SHA-256 wszystkich plików. Dane testowe trafiają do `data/sealed/` i nie są otwierane przed zamrożeniem protokołu.
+The script downloads the data once and writes `data/MANIFEST.json` with the download date, the Dst version counts per split and SHA-256 checksums of every file. Test data go to `data/sealed/` and are not opened before the protocol is frozen.
 
-## Źródła danych
+## Data sources
 
-- [NASA OMNI2, dane godzinowe](https://spdf.gsfc.nasa.gov/pub/data/omni/low_res_omni/)
-- [Kyoto WDC, indeks Dst](https://wdc.kugi.kyoto-u.ac.jp/dstdir/): wersja ostateczna do 2020 roku, wstępna od 2021 roku
+- [NASA OMNI2, hourly data](https://spdf.gsfc.nasa.gov/pub/data/omni/low_res_omni/)
+- [Kyoto WDC, Dst index](https://wdc.kugi.kyoto-u.ac.jp/dstdir/): final version up to 2020, provisional from 2021
