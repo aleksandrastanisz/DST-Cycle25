@@ -342,6 +342,7 @@ Conclusions apply to: Dst forecasts at horizons of 1 h and 6 h, the OMNI and Kyo
 | Date | What changed | Reason | Impact on analysis |
 |---|---|---|---|
 | 2026-11-24 | Disclosure (before freezing): while checking the format of the downloaded Kyoto files, the first and last rows of the 2020, 2021, 2024 and 2025 files (8 hourly Dst values in total) and the counts of version codes in those years were displayed | Transparency | Negligible; no model was evaluated, and storm definitions, rules and thresholds do not depend on these values |
+| 2026-11-24 | Zenodo DOI of the archived protocol added to §14 | Public, immutable timestamp of the frozen protocol | None |
 
 Changes made before freezing are visible in the Git history. Any use of test data before the final evaluation, including in code tests, is disclosed in this table, even if no model was evaluated on it.
 
@@ -356,7 +357,7 @@ Changes made before freezing are visible in the Git history. Any use of test dat
 - Every run records the commit and an uncommitted-changes flag at start. E-main and ablation runs are launched only from a clean repository.
 - XGBoost on CPU is reproducible with the same seed; LSTM training on GPU is not bitwise reproducible (X4 measures the scale of differences).
 - `scripts/make_tables.py` regenerates every table and figure from saved forecasts, without manual steps.
-- The frozen protocol with the code is archived on Zenodo at freezing; the results of the steps planned after freezing (§15), including R0 and P0, go into a later version of the archive, before any evaluation on the test split.
+- The frozen protocol with the code is archived on Zenodo at freezing; the results of the steps planned after freezing (§15), including R0 and P0, go into a later version of the archive, before any evaluation on the test split. Version `protocol-v1.0`: [10.5281/zenodo.24511114](https://doi.org/10.5281/zenodo.24511114); all versions: [10.5281/zenodo.24511113](https://doi.org/10.5281/zenodo.24511113).
 
 ## 15. Decisions prior to freezing (resolved)
 

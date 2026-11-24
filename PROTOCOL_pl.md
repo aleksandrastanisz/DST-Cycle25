@@ -342,6 +342,7 @@ Wnioski dotyczą: prognoz Dst z horyzontem 1 h i 6 h, danych OMNI i Kyoto z §5,
 | Data | Co zmieniono | Powód | Wpływ na analizę |
 |---|---|---|---|
 | 2026-11-24 | Ujawnienie (przed zamrożeniem): przy sprawdzaniu formatu pobranych plików Kyoto wyświetlono pierwsze i ostatnie wiersze plików z lat 2020, 2021, 2024 i 2025 (łącznie 8 godzinowych wartości Dst) oraz liczności kodów wersji w tych latach | Przejrzystość | Znikomy; żaden model nie był oceniany, definicje burz, reguły i progi nie zależą od tych wartości |
+| 2026-11-24 | Dopisanie DOI zarchiwizowanego protokołu w Zenodo do §14 | Publiczny, niezmienialny znacznik czasu zamrożonego protokołu | Brak |
 
 Zmiany przed zamrożeniem są widoczne w historii Git. Każde użycie danych testowych przed oceną końcową, także w testach kodu, jest ujawniane w tej tabeli, nawet gdy żaden model nie był na nich oceniany.
 
@@ -356,7 +357,7 @@ Zmiany przed zamrożeniem są widoczne w historii Git. Każde użycie danych tes
 - Każdy przebieg zapisuje na starcie commit i flagę zmian niezacommitowanych. Przebiegi E-main i ablacji uruchamiamy wyłącznie z czystego repozytorium.
 - XGBoost na CPU jest powtarzalny przy tym samym seedzie; trening LSTM na GPU nie jest bitowo powtarzalny (X4 mierzy skalę różnic).
 - `scripts/make_tables.py` odtwarza każdą tabelę i rysunek z zapisanych prognoz, bez ręcznych kroków.
-- Zamrożony protokół z kodem archiwizujemy w Zenodo w chwili zamrożenia; wyniki kroków zaplanowanych po zamrożeniu (§15), w tym R0 i P0, w kolejnej wersji archiwum, przed jakąkolwiek oceną na teście.
+- Zamrożony protokół z kodem archiwizujemy w Zenodo w chwili zamrożenia; wyniki kroków zaplanowanych po zamrożeniu (§15), w tym R0 i P0, w kolejnej wersji archiwum, przed jakąkolwiek oceną na teście. Wersja `protocol-v1.0`: [10.5281/zenodo.24511114](https://doi.org/10.5281/zenodo.24511114); wszystkie wersje: [10.5281/zenodo.24511113](https://doi.org/10.5281/zenodo.24511113).
 
 ## 15. Decyzje przed zamrożeniem (rozstrzygnięte)
 
