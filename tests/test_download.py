@@ -47,7 +47,7 @@ def test_align_finds_one_hour_shift():
     kyoto = pd.DataFrame({"t_kyoto": t + pd.Timedelta(hours=1), "Dst": dst})
     aligned, info = dd.align_kyoto(omni, kyoto)
     assert info["lag_hours"] == -1
-    assert (aligned.t_start.values == t.values).all()
+    pd.testing.assert_index_equal(pd.DatetimeIndex(aligned.t_start), t, check_names=False, check_freq=False)
 
 
 def test_label_version_boundaries():
