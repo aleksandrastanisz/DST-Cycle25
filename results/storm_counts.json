@@ -1,0 +1,17 @@
+{
+  "train": {
+    "moderate": 203,
+    "intense": 80,
+    "superintense": 8
+  },
+  "calib": {
+    "moderate": 129,
+    "intense": 26,
+    "superintense": 0
+  },
+  "test": {
+    "moderate": 81,
+    "intense": 24,
+    "superintense": 2
+  }
+}

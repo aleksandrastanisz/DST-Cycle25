@@ -34,7 +34,7 @@ def test_single_storm_minimum_window_and_category():
     assert w.t_min[0] == t_min and w.dst_min[0] == -120
     assert w.start[0] == t_min - pd.Timedelta(hours=24)
     assert w.end[0] == t_min + pd.Timedelta(hours=48)
-    assert w.category[0] == "intense" and not w.extreme[0]
+    assert w.category[0] == "intense" and not w.superintense[0]
 
 
 def test_below_threshold_is_not_a_storm():
@@ -61,12 +61,12 @@ def test_overlapping_windows_merge_and_take_lowest_minimum():
     assert w.n_minima[0] == 2 and w.dst_min[0] == -180 and w.category[0] == "intense"
 
 
-def test_separate_windows_and_extreme_flag():
+def test_separate_windows_and_superintense_flag():
     d = series(quiet(100) + dip(-300) + quiet(200) + dip(-60) + quiet(100))
     w = storms.storm_windows(d)
     assert len(w) == 2
-    assert w.extreme.tolist() == [True, False]
-    assert storms.count_by_category(w) == {"moderate": 1, "intense": 1, "extreme": 1}
+    assert w.superintense.tolist() == [True, False]
+    assert storms.count_by_category(w) == {"moderate": 1, "intense": 1, "superintense": 1}
 
 
 def test_split_assignment_by_minimum_and_clipping():

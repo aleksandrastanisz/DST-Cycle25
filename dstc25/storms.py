@@ -5,7 +5,7 @@ import pandas as pd
 
 STORM_THRESHOLD = -50.0      # nT, a storm minimum must be at or below this
 INTENSE_THRESHOLD = -100.0   # nT
-EXTREME_THRESHOLD = -250.0   # nT
+SUPERINTENSE_THRESHOLD = -250.0   # nT
 HALF_SEARCH_H = 24           # minimum must be the lowest value within +-24 h
 WINDOW_BEFORE_H = 24
 WINDOW_AFTER_H = 48
@@ -40,7 +40,7 @@ def storm_windows(dst: pd.Series) -> pd.DataFrame:
     """Merged storm windows (protocol 6.2): [t_min - 24 h, t_min + 48 h], overlapping windows merged.
 
     Columns: start, end (inclusive t_start of first and last hour), t_min and dst_min of the
-    lowest minimum, n_minima, category ('moderate' or 'intense') and extreme (bool).
+    lowest minimum, n_minima, category ('moderate' or 'intense') and superintense (bool).
     """
     minima = find_minima(dst)
     rows = []
@@ -56,7 +56,7 @@ def storm_windows(dst: pd.Series) -> pd.DataFrame:
             rows.append({"start": start, "end": end, "t_min": t, "dst_min": value, "n_minima": 1})
     out = pd.DataFrame(rows, columns=["start", "end", "t_min", "dst_min", "n_minima"])
     out["category"] = out.dst_min.le(INTENSE_THRESHOLD).map({True: "intense", False: "moderate"})
-    out["extreme"] = out.dst_min.le(EXTREME_THRESHOLD)
+    out["superintense"] = out.dst_min.le(SUPERINTENSE_THRESHOLD)
     return out
 
 
@@ -73,5 +73,5 @@ def count_by_category(windows: pd.DataFrame) -> dict:
     return {
         "moderate": int((windows.category == "moderate").sum()),
         "intense": int((windows.category == "intense").sum()),
-        "extreme": int(windows.extreme.sum()),
+        "superintense": int(windows.superintense.sum()),
     }
