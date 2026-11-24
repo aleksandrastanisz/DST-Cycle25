@@ -1,8 +1,8 @@
 # PROTOCOL: Dst forecasts and uncertainty-interval coverage during storms of solar cycle 25
 
-**Version:** 0.5 (draft, not frozen), 2026-11-24
+**Version:** 1.0 (frozen), 2026-11-24
 
-**Status:** draft. The protocol is frozen once the open items in §15 are closed, before the first training run. After freezing, any modification requires an entry in §13 (date, reason, impact).
+**Status:** frozen before the first training run and before any evaluation on test data. Any subsequent modification requires an entry in §13 (date, reason, impact).
 
 **Scope:** historical data (NASA OMNI, Kyoto WDC). Conclusions do not apply to operational forecasting from real-time L1 data (§12).
 
@@ -43,16 +43,17 @@ We do not ask which ML model is best, nor about lead times longer than 6 h. All 
 Before interpreting results we accept that the following cannot be separated:
 
 1. **Physical change versus label-version change.** Training and calibration use final Dst; the test period is mostly provisional (§5.1). The versions determine the baseline and Sq variation differently, so part of the distribution shift in the test period may come from the index version rather than from physics.
-2. **Model value versus input data quality.** OMNI data are processed after the fact and time-shifted to the bow-shock nose. Results are an upper bound for operational forecasting.
+2. **Model value versus input data quality.** OMNI data are processed after the fact and time-shifted to the bow-shock nose. Results are an upper bound for operational forecasting. This also applies to Dst as a model input: at time t only real-time Dst is available operationally, with noise and baseline jumps, whereas the models receive the final or provisional version. This inflates the skill of the models and of persistence, most at h = 1 h.
 3. **Storm-time coverage versus conditioning on the outcome.** Storm windows are defined from observed Dst (§6), so storm-time coverage is conditional on the outcome. Windows include every storm phase, which weakens this effect but does not remove it.
-4. **Shift between cycles versus the difficulty of storms themselves.** We therefore also report storm-time coverage of C-Mond and C-DtACI on cycle 24, out of the calibration sample (§7.3, M9). A drop relative to cycle 24 measures shift; coverage below nominal on its own does not.
+4. **Shift between cycles versus the difficulty of storms themselves.** We therefore also report storm-time coverage of C-Mond and C-DtACI on cycle 24, out of the calibration sample (§7.3, M9). A drop relative to cycle 24 measures shift, and this drop is what H2 tests; coverage below nominal on its own does not.
+5. **Shift between cycles versus the weakness of the calibration cycle.** Cycle 24 was the weakest in a century (26 intense-storm windows, no superintense one), while cycle 25 is clearly stronger. An H2 result therefore concerns the move from a weak calibration cycle to a stronger test cycle and does not establish whether the same drop would occur between cycles of similar strength.
 
 ## 4. Hypotheses
 
 Hypotheses are decided only by the rules in §10. Every result, including null results, is reported. Each hypothesis is tested for two ML models (X, L) and two horizons (1 h, 6 h), giving 4 tests per hypothesis.
 
 - **H1 (ML advantage shrinks with storm intensity).** The skill score of an ML model relative to persistence is lower in intense-storm windows than in quiet hours.
-- **H2 (conditional coverage does not transfer to a new cycle).** C-Mond intervals calibrated on cycle 24 have coverage below the nominal 90% in intense-storm windows of cycle 25.
+- **H2 (conditional coverage drops on moving to a new cycle).** Coverage of C-Mond intervals in intense-storm windows is lower on cycle 25 than on cycle 24, measured out of the calibration sample (M9).
 - **H3 (adaptation restores coverage).** C-DtACI intervals have higher coverage than C-Mond in intense-storm windows, and coverage of at least 85%.
 
 Directional predictions, **exploratory** (no multiple-comparison correction, reported as observations):
@@ -79,6 +80,7 @@ Directional predictions, **exploratory** (no multiple-comparison correction, rep
 - `t_start` is the start of the hour whose mean the record describes.
 - The value for the interval [t − 1 h, t) is known at time t. A forecast issued at time t uses only such values.
 - The target of a forecast with horizon h is Dst for the interval [t + h − 1 h, t + h).
+- **Notation:** `Dst(t)` denotes the value for the interval [t − 1 h, t), that is the record with `t_start = t − 1 h`. This applies to every formula with argument t (§2, §7, §7.1). In §6 and in the code, times denote the `t_start` of hourly records.
 - Kyoto and OMNI may label hours differently. The offset is determined on 1995–2014 data by comparing Kyoto Dst with Dst in OMNI. We accept an offset with at least 99% agreement; if none reaches it, work stops until the cause is explained. At h = 1 h, a one-hour offset would leak the target into the input.
 
 ### 5.3 Splits (finite, frozen, on disk)
@@ -93,83 +95,88 @@ Data are downloaded once by `scripts/download_data.py`. The download date, Dst v
 
 Split boundaries are calendar dates, not exact cycle boundaries: train also contains the tail of cycle 22 (1995–1996), and cycle 24 began in late 2008. Each stage nevertheless covers mainly one cycle. Calibrating on all of cycle 24, rather than on 2015–2019, ensures storms from different phases of the cycle.
 
-**The test split** is touched **only** in the final evaluation. It is not used for tuning, model selection, debugging or plots. Exception, computed from Dst alone before any model is run: the number of storm windows in the test period (§6), which the power analysis also needs (§10.4).
+**The test split** is touched **only** in the final evaluation. It is not used for tuning, model selection, debugging or plots. Exception, computed from Dst alone, before any model is evaluated on the test split: the number of storm windows and quiet blocks in the test period (§6), which the power analysis also needs (§10.4).
 
 ## 6. Storms
 
 **Definition** (fixed in advance, from the Dst series alone):
 
-1. Storm minimum: an hour t with `Dst(t) ≤ −50 nT` where `Dst(t)` is the lowest value in [t − 24 h, t + 24 h]. Ties go to the earliest hour.
+1. Storm minimum: an hourly record with `t_start` = s whose Dst is ≤ −50 nT and is the lowest among records with `t_start` in [s − 24 h, s + 24 h]. Ties go to the earliest record. At the edges of the data (1995-01-01 and 2025-12-31) the interval includes only the available records. Below, t_min denotes the `t_start` of the minimum.
 2. Storm window: [t_min − 24 h, t_min + 48 h]. Overlapping windows are merged; the category of a merged window is set by its lowest minimum.
-3. A window belongs to the split that contains its minimum and is clipped to that split's boundaries.
+3. A window belongs to the split that contains its minimum (for a merged window: its lowest minimum) and is clipped to that split's boundaries.
 4. A forecast hour belongs to a window if its **target hour** lies in the window.
-5. **Quiet blocks:** target hours outside all windows are divided into consecutive 27-day calendar blocks (one solar rotation), starting at the beginning of the split. A block with fewer than 72 quiet hours is merged into the previous one.
+5. **Quiet blocks:** target hours outside all windows are divided into consecutive 27-day calendar blocks (one solar rotation), starting at the beginning of the split. A block with fewer than 72 quiet hours is merged into the previous one, or into the next one if it is the first block of the split. Hours of a storm window assigned to the neighbouring split, cut off by clipping (item 3), are not quiet hours and belong to no category.
 6. **Storm phases:** the main phase is the target hours from the start of the window up to and including the window's lowest minimum; the recovery phase is the target hours after that minimum. In windows merged from several storms, phases are defined relative to the lowest minimum.
 
-**Categories:**
+**Categories** (−50 and −100 nT thresholds following Gonzalez et al. 1994; −250 nT threshold for superintense storms following Echer et al. 2008):
 
 | Category | Minimum Dst [nT] | Role |
 |---|---|---|
 | quiet | blocks from item 5 | reference in H1 |
-| moderate | −50 to −100 | always reported |
-| intense | ≤ −100 | H1–H3 |
-| extreme | ≤ −250 (subset of intense) | descriptive only |
+| moderate | −100 < min ≤ −50 | always reported |
+| intense | min ≤ −100 | H1–H3 |
+| superintense | min ≤ −250 (subset of intense) | descriptive only |
 
 **Minimum number of storms.** If the test period contains fewer than **10** intense-storm windows, H1–H3 are reported descriptively, without a decision. The count is determined before any model is run and recorded in §15.
 
 ## 7. Models and training
 
-- **Inputs to every model:** only values known at time t (§5.2). Current Dst is an input because it is available operationally (real-time index). This makes persistence a demanding reference.
+- **Inputs to every model:** only values known at time t (§5.2). Current Dst is an input because its real-time counterpart is available operationally; the models nevertheless receive the final or provisional version (§3, item 2). This makes persistence a demanding reference.
 - **P:** `Dst(t+h) = Dst(t)`.
-- **E (AK2):** `dDst*/dt = Q − Dst*/τ`, `Q = −4.4·(VBs − 0.5)` nT/h for VBs > 0.5 mV/m and 0 otherwise, `τ = 2.4·exp(9.74 / (4.69 + VBs))` h, `Dst* = Dst − 7.26·√Pdyn + 11` (Dst in nT, Pdyn in nPa). VBs in mV/m: `V [km/s] · Bs [nT] · 10⁻³`, where Bs = −Bz for Bz < 0 and 0 otherwise. Integration with a 1 h step from `Dst*(t)` over h steps. Solar wind is held at its value at time t, since future values are unknown. Constants are not refitted.
-- **X:** XGBoost (regression, squared loss) on the feature set in §7.1, one model per horizon. Missing feature values are handled natively. Every feature must pass the causality test (§14). Fixed: `subsample = 0.8`, `colsample_bytree = 0.8`, so that the seed affects the model.
-- **L:** 24 h window of V, Bz and By in GSM, \|B\|, density, dynamic pressure, VBs and Dst; standardized with train statistics; one network per horizon; a single output.
+- **E (AK2):** `dDst*/dt = Q − Dst*/τ`, `Q = −4.4·(VBs − 0.5)` nT/h for VBs > 0.5 mV/m and 0 otherwise, `τ = 2.4·exp(9.74 / (4.69 + VBs))` h, `Dst* = Dst − 7.26·√Pdyn + 11` (Dst in nT, Pdyn in nPa). VBs in mV/m: `V [km/s] · Bs [nT] · 10⁻³`, where Bs = −Bz for Bz < 0 and 0 otherwise. Integration with the explicit Euler scheme, 1 h step, from `Dst*(t)` over h steps; with a 1 h step the scheme is stable because τ > 2.4 h. Solar wind is held at its value at time t, since future values are unknown. Constants are not refitted.
+- **X:** XGBoost (regression, squared loss) on the feature set in §7.1, one model per horizon. Missing feature values are handled natively. Every feature must pass the causality test (§14). Fixed: `subsample = 0.8`, `colsample_bytree = 0.8` (so that the seed affects the model), `tree_method = hist`, training on CPU; other parameters at the defaults of the frozen package version (§14).
+- **L:** 24 h window of V, Bz and By in GSM, \|B\|, density, dynamic pressure, VBs and Dst; standardized with train statistics; one network per horizon; a linear layer on the last hidden state gives a single output; MSE loss, no dropout.
 - **Every fitted transformation** (standardization, any imputers) is learned on train only.
-- **Missing data:** the last known value fills a gap of at most 3 h. A longer gap means no forecast for that hour. The main evaluation uses only the common set of hours in which **all** four models produce a forecast and the target is known. Because solar-wind data gaps may cluster in large storms, the fraction of excluded hours is reported for each category (M10) and S5 is run (§9).
-- **Seeds:** 5 seeds (42–46) for X and L. The seed controls initialization, data order and XGBoost subsampling. The point forecast is the mean of the 5 models; spread across seeds is reported separately.
+- **Missing data:** inputs of all models are filled with the last known value, at most 3 h back and only from the past. After this step: P requires `Dst(t)`; E requires `Dst(t)` and V, Bz and Pdyn at time t; L requires a complete 24 h window of all channels; X handles the remaining gaps natively. A model without its required inputs issues no forecast for that hour. The main evaluation uses only the common set of hours in which **all** four models produce a forecast and the target is known. Because solar-wind data gaps may cluster in large storms, the fraction of excluded hours is reported for each category (M10) and S5 is run (§9).
+- **Seeds:** 5 seeds (42–46) for X and L. The seed controls initialization and data order in L and subsampling in X. The point forecast is the mean of the 5 models; spread across seeds is reported separately.
 - **Ensemble as the unit:** hypotheses concern the seed-averaged forecast, since that is the model one would deploy.
 
 ### 7.1 Features of model X (fixed in advance)
 
-All features are computed only from values known at time t (§5.2); "lag k" means the value for the interval [t − k − 1 h, t − k).
+All features are computed only from values known at time t (§5.2); "lag k" means the value for the interval [t − k − 1 h, t − k). Running means and sums use complete windows only (after the gap filling in §7); a window with a gap gives a missing feature.
 
 | Group | Features | Rationale |
 |---|---|---|
 | Ring-current state | Dst at lags 0, 1, 2, 3 and 6 h; `Dst(t) − Dst(t − 1 h)`; `Dst(t) − Dst(t − 3 h)` | current state and rate of change (main phase or recovery) |
 | Solar wind | V, Bz and By in GSM, \|B\|, density, Pdyn at lags 0, 1, 2 and 3 h | direct driving |
-| Coupling | VBs [mV/m]; Newell coupling function `V^(4/3)·B_T^(2/3)·sin^(8/3)(θ/2)`, where `B_T = √(By² + Bz²)`, `θ = atan2(By, Bz)`; `√Pdyn` | energy injection (Burton; O'Brien and McPherron) and the pressure correction in Dst* |
+| Coupling | VBs [mV/m]; Newell coupling function `V^(4/3)·B_T^(2/3)·\|sin(θ/2)\|^(8/3)`, where `B_T = √(By² + Bz²)`, `θ = atan2(By, Bz)` (IMF clock angle; absolute value because θ can be negative); `√Pdyn` | energy injection (Burton; O'Brien and McPherron) and the pressure correction in Dst* |
 | Driving history | 3 h and 6 h running means of VBs, Bz, Pdyn and the Newell function; 6 h and 12 h sums of VBs | energy loaded before time t |
 
 44 features in total: 7 + 24 + 3 + 10. The list is frozen with the protocol; no features are added or removed on the basis of results, including validation results. Feature importance (SHAP) is reported descriptively only.
 
 ### 7.2 Tuning (equal budget)
 
-Tuning only within train: fit on 1995–2005, validate on 2006–2009, MSE on validation as the criterion, separate seed 100. Each ML model gets 12 configurations:
+Tuning only within train, by cross-validation over blocks of years. Train is split into 5 consecutive 3-year blocks: 1995–1997, 1998–2000, 2001–2003, 2004–2006 and 2007–2009. In each fold one block is the validation block and the model is fitted on the others, with the 27 days adjacent to the validation block removed so that autocorrelation does not carry information between them. Criterion: mean validation MSE over the 5 folds; separate seed 100. Cross-validation replaces a single validation period because 2006–2009 is a deep solar minimum with only a few intense storms, and hyperparameters chosen on such a period would favour quiet conditions. Each ML model gets 12 configurations per horizon, tuned separately for h = 1 h and h = 6 h:
 
 | Model | Grid |
 |---|---|
 | X | max_depth ∈ {4, 6, 8} × learning_rate ∈ {0.03, 0.1} × min_child_weight ∈ {1, 10}; number of trees by early stopping (patience 50, max 5,000) |
 | L | hidden size ∈ {32, 64, 128} × lr ∈ {10⁻³, 3·10⁻³} × layers ∈ {1, 2}; Adam, batch 256, early stopping (patience 5, max 100 epochs) |
 
-The final model is trained on all of train (1995–2009) with the selected configuration and the number of trees or epochs from the best tuning run. If the optimum lies on the edge of the grid, the grid is not extended and this is reported with the results. Whether the configuration is shared across horizons or selected per horizon is decided in §15.
+Early stopping in each fold uses that fold's validation block. The final model is trained on all of train (1995–2009) with the selected configuration; the number of trees or epochs is the median of the best iterations over the 5 folds of that configuration. If the optimum lies on the edge of the grid, the grid is not extended and this is reported with the results.
 
 ### 7.3 Intervals
 
-Nonconformity score for all methods: `|Dst − forecast|`. Calibration residuals come from calib (models trained on train only).
+Nonconformity score for all methods: `|Dst − forecast|`. Calibration residuals come from calib (models trained on train only), from 2010-01-28: the first 27 days of calib are skipped so that autocorrelation with the end of train does not shrink the residuals. This applies to all methods and to M9.
 
-- **C-split:** quantile of order ⌈(n + 1)·0.9⌉ / n of the calib residuals. The width is constant for a given model and horizon.
-- **C-Mond:** as C-split, but with separate quantiles for classes of `Dst(t)` at issue time: > −30, −30 to −50, −50 to −100, ≤ −100 nT. The class depends on the issue time, not on the outcome. A class with fewer than 200 hours in calib is merged with its neighbour closer to zero; class sizes are reported.
-- **C-DtACI:** Algorithm 1 of Gibbs and Candès (2024): k = 8 ACI experts with steps γ ∈ {0.001, 0.002, 0.004, 0.008, 0.016, 0.032, 0.064, 0.128}, combined with exponential weights; η and σ set by the formulas in the paper for an interval I = 72 h (the storm-window length). Quantile of order 1 − α(t) of the calibration residuals.
+- **C-split:** the ⌈(n + 1)·(1 − α)⌉-th smallest of the n calibration residuals, for α = 0.1 (and for other levels in M13). The width is constant for a given model and horizon.
+- **C-Mond:** as C-split, but with separate quantiles for classes of `Dst(t)` at issue time: `Dst(t) > −30`, `−50 < Dst(t) ≤ −30`, `−100 < Dst(t) ≤ −50`, `Dst(t) ≤ −100` nT. The class depends on the issue time, not on the outcome. A class with fewer than 200 hours in calib is merged with its neighbour closer to zero. Merging is decided once, on all of calib, and applied unchanged in the test period and in M9; class sizes are reported.
+- **C-DtACI:** Gibbs and Candès (2024), deterministic variant (Algorithm 2: α(t) is the weighted average of the experts' levels rather than a single sampled one). k = 8 ACI experts with steps γ ∈ {0.001, 0.002, 0.004, 0.008, 0.016, 0.032, 0.064, 0.128}, as in the paper. Weights are updated with the pinball loss `ℓ(β, θ) = α(β − θ) − min{0, β − θ}`, where β(t) is the largest level at which the target lies in the interval and α = 0.1. Mixing `σ = 1/(2I)`, weight step `η = √(3/I) · √((ln(k·I) + 2) / ((1 − α)²α²))` (formulas from the paper, with its approximation of the loss). Interval I = 72 h, the storm-window length, instead of 500 in the paper; this gives σ ≈ 0.0069 and η ≈ 6.6. Quantile of order 1 − α(t) of the calibration residuals.
 - **C-ACI (S1):** a single expert, `α(t+1) = α(t) + γ·(0.1 − err(t))`, γ ∈ {0.005, 0.05}.
 - **Rules shared by the adaptive methods:**
   - **Feedback delay:** a forecast issued at time t yields `err` only at t + h. The update at time t uses only forecasts whose target is already known.
   - Start: α = 0.1 (and equal expert weights) on 2010-01-01; runs through all of calib and on through test without reset.
+  - Hours without a forecast (§7, missing data) are skipped: they give neither an interval nor an update.
   - When α ≤ 0 the interval is infinite and counted as covered; when α ≥ 1 it is empty and counted as not covered. The number of such hours is reported, and width is reported as a median.
-- **Cycle-24 reference (M9):** C-Mond and C-DtACI computed on the two halves of calib by cross-fitting: quantiles from 2010–2014 applied to 2015–2019 and vice versa. This gives intense-storm coverage out of the calibration sample but within the calibration cycle.
+- **Cycle-24 reference (M9):** C-Mond and C-DtACI computed on the two halves of calib by cross-fitting: quantiles from 2010–2014 applied to 2015–2019 and vice versa. Residuals are split by hour, and a storm window is assigned to the half that contains its lowest minimum. For C-DtACI the residual distribution comes from one half, and the online run through the other half starts from the initial state (α = 0.1, equal weights). This gives intense-storm coverage out of the calibration sample but within the calibration cycle.
 
 ## 8. Metrics
 
 All computed on the common set of hours (§7), separately for each model, horizon and category from §6.
+
+**The common set of hours** is determined separately for each horizon and is the same for all interval methods. Ablations (§9) are evaluated on the E-main set; hours in which the ablated model has no forecast are additionally excluded and their number is reported.
+
+**A unit enters the analysis** if at least half of its target hours are in the common set; other units are excluded and counted in M10.
 
 **Aggregation.** The primary statistic is a mean over **units** (storm windows; quiet blocks in the quiet category), each unit with equal weight. The hour-weighted version is reported as secondary. For the skill score we aggregate errors, not ratios:
 
@@ -191,10 +198,10 @@ All computed on the common set of hours (§7), separately for each model, horizo
 | M4 | median interval width [nT] |
 | M5 | interval score for α = 0.1: `(u − l) + (2/α)·(l − y)·1[y < l] + (2/α)·(y − u)·1[y > u]` [nT] |
 | M6 | SS relative to model E: `1 − mean_j MSE_model,j / mean_j MSE_E,j` |
-| M7 | hidden-persistence check: the shift k ∈ {0, …, h + 3} h that maximizes the correlation between forecast and observation within a storm window; median over windows and fraction of windows with k ≥ h (cf. Laperre et al. 2020) |
-| M8 | per window: forecast minimum minus observed minimum [nT] and timing error of the minimum [h] |
-| M9 | intense-storm coverage of C-Mond and C-DtACI on cycle 24, cross-fitted (§7.3); difference M2(test) − M9 |
-| M10 | fraction of hours excluded from evaluation because of missing data, per category |
+| M7 | hidden-persistence check: the shift k ∈ {0, …, h + 3} h that maximizes the correlation between forecast and observation within a storm window; median over windows and fraction of windows with k ≥ h (cf. Laperre et al. 2020); windows with a constant forecast are skipped |
+| M8 | per window: forecast minimum minus observed minimum [nT] and timing error of the minimum [h]; ties go to the earliest hour |
+| M9 | intense-storm coverage of C-Mond and C-DtACI on cycle 24, cross-fitted (§7.3); drop `δ = M9 − M2(test)`, which for C-Mond is the H2 statistic |
+| M10 | fraction of hours excluded from evaluation because of missing data and number of units excluded by the half-of-hours rule, per category |
 | M11 | dose–response curve: M1 and M2 computed for each window separately as a function of the window's minimum Dst; scatter plot and means in 50 nT bins of the minimum |
 | M12 | point-forecast shift: M3(test) / M3(calib) per category; calib is out of the training sample for the models |
 | M13 | coverage curve: M2 at nominal levels 50, 60, 70, 80, 90 and 95% (C-split, C-Mond, C-DtACI), separately for quiet hours and intense storms |
@@ -205,18 +212,18 @@ M1–M5 are also reported separately for storm phases (§6, item 6).
 
 | ID | Description | Role |
 |---|---|---|
-| R0 | pipeline correctness checks on 2006–2009 (tuning validation), §9.1 | prerequisite; no test data |
-| P0 | power analysis on cycle 24 (§10.4) | prerequisite; no test data |
+| R0 | pipeline correctness checks on out-of-fold predictions from cross-validation (train), §9.1 | prerequisite; no test data |
+| P0 | power analysis on cycle 24 (§10.4) | informational; no test data |
 | E-main | P, E, X, L × h ∈ {1, 6} × {C-split, C-Mond, C-DtACI} on test | confirmatory (H1, H2, H3) |
 | S1 | C-ACI with γ ∈ {0.005, 0.05} | sensitivity to the adaptation scheme |
 | S2 | hour-weighted statistics instead of unit-weighted | sensitivity to aggregation |
 | S3 | storm windows [t_min − 12 h, t_min + 24 h] instead of §6 | sensitivity to the window definition |
 | S4 | M6 and an H1 analogue relative to model E | whether conclusions depend on the choice of reference |
 | S5 | P and X on all hours for which they themselves produce a forecast (XGBoost handles missing values) | sensitivity to missing-data exclusions |
-| S6 | leave-one-storm-out: every confirmatory statistic recomputed without each intense-storm window in turn | stability of decisions |
-| X1 | storms of 10–11 May and 10–11 October 2024: M2, M4 and M8 | exploratory, descriptive only |
-| X2 | M1–M3 for all models and interval methods, separately for 2020 (final Dst) and 2021–2025 (provisional Dst) | exploratory; effect of the label version (§3, item 1) |
-| X3 | H1–H3 counterparts for the extreme category | descriptive only |
+| S6 | leave-one-storm-out: every confirmatory statistic recomputed without each intense-storm window of the test period in turn | stability of decisions |
+| X1 | storm windows whose lowest minimum falls on 10–11 May or 10–11 October 2024: M2, M4 and M8 | exploratory, descriptive only |
+| X2 | M1–M3 for all models and interval methods, separately for 2020 (final Dst) and 2021–2025 (provisional Dst); categories without windows in a period are omitted | exploratory; effect of the label version (§3, item 1) |
+| X3 | H1–H3 counterparts for the superintense category | descriptive only |
 | X4 | one repeat of training L (seed 42, both horizons) with the same configuration | scale of run-to-run noise from GPU nondeterminism; descriptive only |
 | A1 | X and L without any Dst inputs (X without the "ring-current state" group, L without the Dst channel) | ablation: whether the advantage over persistence comes from the solar wind or from extending current Dst |
 | A2 | X without the "coupling" group | ablation: contribution of the coupling functions |
@@ -227,16 +234,16 @@ M1–M5 are also reported separately for storm phases (§6, item 6).
 
 ### 9.1 Correctness checks (R0)
 
-Run on the tuning validation data (2006–2009), before any contact with calib or test. Failure of any check means a bug to find, not a result.
+Run on out-of-fold predictions from cross-validation of the selected configuration, over the whole train period, before any contact with calib or test. Failure of any check means a bug to find, not a result; the bug and its fix are recorded in §13.
 
 1. **Positive control:** X and L must have lower MSE than P at both horizons. A model that does not beat persistence on data from the same cycle is most likely wired incorrectly.
 2. **Target-leakage control:** X trained with the target added as a feature must reach MAE close to zero (< 1 nT). This confirms the pipeline can detect leakage when it exists.
 3. **Negative control:** X trained on a target randomly shuffled within train must not beat a constant forecast (the train mean) by more than 1% in MSE.
-4. **Model E:** correlation between forecast and observation > 0.8 at h = 1 h. This checks units (VBs in mV/m, Pdyn in nPa) and the integration.
+4. **Model E:** (a) unit test: under constant driving VBs = 5 mV/m and Pdyn = 2 nPa, `Dst*` converges to the steady state `Q·τ` within 1%; this checks units (VBs in mV/m, Pdyn in nPa) and the integration. (b) Correlation between forecast and observation > 0.8 at h = 1 h; this only checks that the model is wired in, because at h = 1 h the correlation comes mainly from `Dst(t)`.
 
 **Analysis of S1–S5, A1–A4 and X1–X4** is descriptive, without hypothesis tests: point estimate and 95% bootstrap interval (§10).
 
-**Run order** (most important for interpretation first): R0, P0, tuning, E-main, S6, A1, A4, S5, S2, S4, A2, A3, S1, S3, X4, X1, X3, X2.
+**Run order** (most important for interpretation first): tuning, R0, P0, E-main, S6, A1, A4, S5, S2, S4, A2, A3, S1, S3, X4, X1, X3, X2.
 
 ## 10. Statistics and decision rules
 
@@ -244,9 +251,13 @@ Run on the tuning validation data (2006–2009), before any contact with calib o
 
 **The independent unit** is a storm window or a quiet block (§6), not an hour, because hours within one storm are strongly correlated.
 
-**Bootstrap.** In each replicate, storm windows are resampled with replacement separately within each category, and quiet blocks are resampled likewise. One set of draws is shared by all models, horizons and interval methods, because comparisons are paired. 10,000 replicates, seed 2026. Percentile 95% intervals. The one-sided p-value is the fraction of replicates in which the statistic lies on or beyond the null boundary (0 for H1 and H3, 0.90 for H2).
+**Bootstrap.** In each replicate, storm windows are resampled with replacement separately within each category, and quiet blocks are resampled likewise. One set of draws is shared by all models, horizons and interval methods, because comparisons are paired. 10,000 replicates, seed 2026. Percentile 95% intervals. The one-sided p-value is `(b + 1)/(B + 1)`, where b is the number of replicates in which the statistic lies on or beyond the null boundary (0 for H1, H2 and H3) and B = 10,000; p is therefore never zero. The calib intense-storm windows needed for M9 in H2 are resampled independently of the test windows (separate random stream, seed 2028), jointly for all models and horizons.
 
-**Correction.** Holm's method separately within each family: 4 tests per hypothesis (X, L × 1 h, 6 h), α = 0.05.
+**Scope of inference.** The bootstrap covers the variability of the test set (storms and blocks). Inference concerns the trained ensemble, that is the mean of 5 seeds; it does not cover training variability, which is therefore reported descriptively (spread across seeds, X4).
+
+**Correction.** Holm's method separately within each family: 4 tests per hypothesis (X, L × 1 h, 6 h), α = 0.05. Type I error is controlled separately within each of the three families (H1, H2, H3); no correction is applied across families.
+
+**Practical thresholds** (0.05 for the skill score, 5 percentage points of coverage in H2, 3 points for the paired difference in H3) are fixed in advance as the smallest differences we consider practically relevant to a forecast user. They are not derived from the data; P0 shows which effects are detectable at these thresholds.
 
 ### 10.2 Rules
 
@@ -255,30 +266,35 @@ Run on the tuning validation data (2006–2009), before any contact with calib o
 - `Δ ≥ 0.05` (practical threshold),
 - Holm-adjusted p < 0.05.
 
-**H2.** For C-Mond on model v and horizon h: `cov = M2(intense)`. H2 is supported when both:
+**H2.** For C-Mond on model v and horizon h: `δ = M9(intense) − M2(test; intense)`, the drop in intense-storm coverage from cycle 24 to cycle 25. H2 is supported when both:
 
-- `cov ≤ 0.85` (at least 5 percentage points below nominal),
-- Holm-adjusted p < 0.05 for `cov < 0.90`.
+- `δ ≥ 0.05` (a drop of at least 5 percentage points),
+- Holm-adjusted p < 0.05 for `δ > 0`.
 
-M9 and the difference M2(test) − M9 are reported alongside; they do not enter the rule, but without them an H2 result is not interpreted as an effect of shift between cycles (§3, item 4).
+The absolute coverage M2(test; intense) is reported alongside. The H2 conclusion concerns the move from the weak cycle 24 to the stronger cycle 25 (§3, item 5).
 
 **H3.** `D = M2(intense; C-DtACI) − M2(intense; C-Mond)`. H3 is supported when all of:
 
 - `D ≥ 0.03`,
 - Holm-adjusted p < 0.05 for `D > 0`,
-- `M2(intense; C-DtACI) ≥ 0.85`.
+- point estimate `M2(intense; C-DtACI) ≥ 0.85`.
 
 The ratio of median widths of C-DtACI to C-Mond is also reported; it does not enter the rule.
 
 ### 10.3 Robustness
 
-- **Few clusters.** A bootstrap over a dozen or so clusters can be anti-conservative. For H3, where the comparison is paired within each window, an exact sign-flip permutation test on the per-window differences `D_j` is also reported. The rule in §10.2 decides; any disagreement with the permutation test is flagged in the report.
+- **Few clusters.** A bootstrap over a dozen or so clusters can be anti-conservative. For H3, where the comparison is paired within each window, a sign-flip permutation test on the per-window differences `D_j` is also reported (100,000 random sign flips, seed 2027; p computed as in §10.1). The rule in §10.2 decides; any disagreement with the permutation test is flagged in the report.
 - **Influence of a single storm (S6).** If removing one window changes the decision for any hypothesis, the decision remains formally valid but is reported as **fragile**, naming that storm.
 - **Missing data.** If M10 in the intense category exceeds 10%, H1–H3 results are reported with a caveat and alongside S5.
 
-### 10.4 Power analysis (P0, before freezing)
+### 10.4 Power analysis (P0, informational)
 
-On cycle 24, with models trained on train: resample with replacement as many intense-storm windows as the test period contains (count from §6), and for effects equal to the thresholds in §10.2 estimate the probability that each hypothesis is supported (1,000 simulations). Report the minimum detectable effect at 80% power. If the thresholds are undetectable, they are changed **before** freezing and the reason is recorded in §15. Thresholds are not changed after freezing.
+P0 is run after the protocol is frozen, before the test evaluation. It is informational only: it does not change thresholds, rules or which hypotheses are decided. It serves to interpret a possible null result.
+
+1. On calib, with models trained on train and with C-Mond and C-DtACI intervals cross-fitted as in M9, compute the statistics in §10.2.
+2. Estimate their standard error SE by bootstrap (10,000 replicates, seed 2029), resampling with replacement as many intense-storm windows and quiet blocks as the test period contains (§6; the number of quiet blocks is counted at P0, from Dst only). For H2, `SE = √(SE_M9² + SE_test²)`: the first term from resampling the 26 calib windows, the second from resampling as many windows as the test period contains, both on calib data.
+3. A hypothesis is supported when the estimated distance from the H0 boundary exceeds both the practical threshold d and z·SE, where z = z_{1−0.0125} ≈ 2.24 (the strictest Holm level with 4 tests). Under the normal approximation the smallest effect detectable with 80% power is `MDE80 = max(d, 2.24·SE) + 0.84·SE`, with d = 0.05 for H1 and H2 and 0.03 for H3.
+4. MDE80 is reported for each hypothesis, model and horizon. The C-DtACI coverage condition ≥ 0.85 in H3 is ignored in this approximation, and this is stated in the report.
 
 **Additionally (always):** M1–M13 for all models, horizons and categories, with 95% bootstrap intervals; spread of M1 and M3 across seeds; C-split as a reference.
 
@@ -296,14 +312,19 @@ On cycle 24, with models trained on train: resample with replacement as many int
 | Hypotheses formulated after reading papers with cycle-25 results (e.g. Yu et al. 2026: pooled coverage below nominal) | Disclosed in the paper; blinding covers evaluation of our models, not knowledge of the literature |
 | The author knows how the 2024 storms unfolded | Blinding covers model evaluation, not knowledge of events; storm definitions and rules fixed before evaluation |
 | Storm windows defined from observed Dst | §3; S3 tests sensitivity to the window definition |
-| Few intense storms in the test period; bootstrap with few clusters | 10-storm threshold (§6); power analysis P0; permutation test for H3; extreme category descriptive only |
+| Few intense storms in the test period; bootstrap with few clusters | 10-storm threshold (§6); power analysis P0; permutation test for H3; superintense category descriptive only |
 | A single storm (e.g. May 2024) dominates the statistics | Equal weighting of windows (§8); S6 and flagging of fragile decisions |
 | Missing data clustered in storms | M10, 10% threshold and S5 |
 | Unstable skill score in quiet hours | M1b as a complement; aggregating errors rather than ratios |
 | Model E outside its fitted range in intense storms | Exploratory only; stated in §2 |
-| Coverage below nominal may reflect storm difficulty rather than cycle shift | M9 as a cycle-24 reference (§3, item 4) |
+| Coverage below nominal may reflect storm difficulty rather than cycle shift | H2 tests the drop relative to cycle 24 (M9), not the absolute level (§3, item 4) |
+| Weak calibration cycle (24) versus a stronger test cycle (25) | §3, item 5; narrowed wording of the H2 conclusion (§12) |
+| Dst input in a better version than is available operationally | §3, item 2; skill at h = 1 h as an upper bound (§12) |
+| Hyperparameters chosen for quiet conditions | Cross-validation over blocks of years instead of a solar-minimum period (§7.2) |
+| Asymmetry in H3: C-DtACI without classes, C-Mond with classes | Stated as a limitation; a combined variant is out of scope |
 | Hourly residuals are not exchangeable (autocorrelation) | The C-split and C-Mond guarantees are not exact even on calib; coverage on calib is reported as a check |
 | Hyperparameters tuned on cycle 23 only | Limitation; equal tuning budget for X and L (§7.2) |
+| Storms are rare and training does not up-weight them | Deliberate: we evaluate the common practice of MSE training; the limitation is discussed |
 | Choice of step size in the adaptive method | C-DtACI tunes its own step; γ grid and interval I fixed in advance; C-ACI with fixed γ in S1 |
 | Data revisions after download | Single download, SHA-256 checksums and date in `MANIFEST.json` |
 | The ML advantage comes from extending current Dst rather than from the physics of driving | A1 and A4; M7 check |
@@ -312,7 +333,7 @@ On cycle 24, with models trained on train: resample with replacement as many int
 
 ## 12. Scope of conclusions
 
-Conclusions apply to: Dst forecasts at horizons of 1 h and 6 h, the OMNI and Kyoto data in §5, models P, E, X and L built in this project, trained on 1995–2009 and evaluated on 2020–2025, the interval methods in §2, and the storm definitions in §6. They **do not apply** to operational forecasting from real-time L1 data, other indices (SYM-H, Kp), longer horizons, or models not listed in §2. Conclusions about extreme storms (≤ −250 nT) are descriptive.
+Conclusions apply to: Dst forecasts at horizons of 1 h and 6 h, the OMNI and Kyoto data in §5, models P, E, X and L built in this project, trained on 1995–2009 and evaluated on 2020–2025, the interval methods in §2, and the storm definitions in §6. They **do not apply** to operational forecasting from real-time L1 data, other indices (SYM-H, Kp), longer horizons, or models not listed in §2. Conclusions about superintense storms (≤ −250 nT) are descriptive. The H2 conclusion concerns the move from the weak cycle 24 to the stronger cycle 25 (§3, item 5). Skill at h = 1 h is an upper bound also because the Dst input is not the real-time version (§3, item 2).
 
 **Comparison with the literature** (e.g. Sandu and Beșliu-Ionescu 2026, Yu et al. 2026) is descriptive only and takes place in the discussion, after the final evaluation. Differences in test periods, Dst versions and metrics mean the numbers are not directly comparable; it does not affect any decision.
 
@@ -328,15 +349,16 @@ Changes made before freezing are visible in the Git history. Any use of test dat
 
 - Data: `scripts/download_data.py`, run once; `data/MANIFEST.json` with download date, URLs, Dst version counts per split, hour offset, package versions and SHA-256 checksums.
 - All model, interval and bootstrap parameters in `configs/*.yaml`. The report includes the config and commit hashes.
-- Automated tests: OMNI parser and fill values, hour alignment, split disjointness, storm-window definition on synthetic data, causality of every feature (changing data after time t does not change the feature at time t), feedback delay in C-ACI and C-DtACI, agreement of the C-DtACI implementation with an example from Gibbs and Candès.
-- The final evaluation script refuses to run if the SHA-256 of `data/sealed/test.parquet` does not match `MANIFEST.json` or the commit lacks the `protocol-v1.0` tag.
+- Exact versions of all packages (`pip freeze`) are saved in the repository before tuning and are not changed until the evaluation is complete; a version change is an entry in §13.
+- Automated tests: OMNI parser and fill values, hour alignment, split disjointness, storm-window definition on synthetic data, causality of every feature (changing data after time t does not change the feature at time t), feedback delay in C-ACI and C-DtACI, steady state of model E under constant driving, agreement of the C-DtACI implementation with an example from Gibbs and Candès.
+- The final evaluation script refuses to run if the SHA-256 of `data/sealed/test.parquet` does not match `MANIFEST.json` or the current commit is not a descendant of the `protocol-v1.0` tag.
 - The implementation of the bootstrap, Holm correction and rules in §10 is validated on synthetic data with a known effect (with and without an effect) before the final evaluation.
 - Every run records the commit and an uncommitted-changes flag at start. E-main and ablation runs are launched only from a clean repository.
 - XGBoost on CPU is reproducible with the same seed; LSTM training on GPU is not bitwise reproducible (X4 measures the scale of differences).
 - `scripts/make_tables.py` regenerates every table and figure from saved forecasts, without manual steps.
-- The frozen protocol, with the code and the R0 and P0 results, is archived on Zenodo before any evaluation on the test split.
+- The frozen protocol with the code is archived on Zenodo at freezing; the results of the steps planned after freezing (§15), including R0 and P0, go into a later version of the archive, before any evaluation on the test split.
 
-## 15. Decisions prior to freezing
+## 15. Decisions prior to freezing (resolved)
 
 **Resolved:**
 
@@ -346,16 +368,44 @@ Changes made before freezing are visible in the Git history. Any use of test dat
 - **Unit of analysis:** storm window or quiet block; equal weighting of units.
 - **Confirmatory methods:** C-Mond (H2) and C-DtACI (H3). C-split is not tested, because it does not promise conditional coverage (change from version 0.1).
 - **Models:** all built from scratch in the project; model X features frozen in §7.1 (change from version 0.2, in which model X was based on the Sandu and Beșliu-Ionescu code).
+- **Hour alignment:** the Kyoto-to-OMNI offset is 0 h, with 100% agreement on 1995–2014; other offsets give 7–15% agreement (`MANIFEST.json`, download of 2026-11-24).
+- **OMNI columns:** column numbers and fill values in `OMNI_COLS` match `omni2.text`.
 - **Model E constants:** b = 7.26 nT·nPa^−1/2 and c = 11 nT, following O'Brien and McPherron (2000).
 
-**Open (to close before freezing):**
+- **Tuning:** separately for each horizon, grids in §7.2, cross-validation over 5 blocks of 3 years.
+- **H2:** tests the drop in C-Mond coverage relative to cycle 24 (M9), with independent bootstrap of windows from both cycles.
+- **C-DtACI:** deterministic variant, γ grid, σ and η following Gibbs and Candès (2024), interval I = 72 h (§7.3).
+- **Practical thresholds:** Δ ≥ 0.05; δ ≥ 0.05; D ≥ 0.03 (§10.2); P0 is informational and does not affect decisions (§10.4).
 
-- [ ] R0 result (correctness checks, §9.1)
-- [ ] Kyoto-to-OMNI hour offset and agreement (from `MANIFEST.json`)
-- [ ] OMNI column numbers and fill values checked against `omni2.text`
-- [ ] η and σ formulas for C-DtACI and the γ grid copied from Gibbs and Candès (2024)
-- [ ] C-Mond class sizes on calib and any class merging
-- [ ] Tuning grids in §7.2 and whether the configuration is shared across horizons
-- [ ] Number of intense-storm windows in the test period (§6)
-- [ ] P0 result and final practical thresholds in §10.2 (currently Δ ≥ 0.05; cov ≤ 0.85; D ≥ 0.03)
-- [ ] Compute-time estimate after a smoke test (tuning, E-main, ablations) on a GTX 1660
+- **Number of storm windows** according to §6 (`scripts/count_storms.py`, from Dst only; `results/storm_counts.json`):
+
+| Split | Moderate | Intense | Of which superintense |
+|---|---|---|---|
+| train | 203 | 80 | 8 |
+| calib | 129 | 26 | 0 |
+| test | 81 | 24 | 2 |
+
+  The test period has 24 intense-storm windows, above the threshold of 10 in §6, so H1–H3 are decided formally. Calib contains no superintense storm, so the intervals were not calibrated on such a case.
+
+**Steps planned after freezing, before the test evaluation** (results recorded in §13 as execution of the plan, not as deviations):
+
+1. Compute-time estimate after a smoke test on a GTX 1660.
+2. Tuning and R0 (§7.2, §9.1).
+3. C-Mond class sizes on calib and class merging under the rule in §7.3.
+4. P0 (§10.4).
+5. Archiving the results of steps 1–4 on Zenodo, then E-main.
+
+## References
+
+- Echer, E., Gonzalez, W. D., Tsurutani, B. T. (2008). Interplanetary conditions leading to superintense geomagnetic storms (Dst ≤ −250 nT) during solar cycle 23. *Geophysical Research Letters*, 35. [doi.org/10.1029/2007GL031755](https://doi.org/10.1029/2007GL031755)
+- Gibbs, I., Candès, E. (2021). Adaptive conformal inference under distribution shift. arXiv:2106.00170. [arxiv.org/abs/2106.00170](https://arxiv.org/abs/2106.00170)
+- Gibbs, I., Candès, E. (2024). Conformal inference for online prediction with arbitrary distribution shifts. *Journal of Machine Learning Research*, 25(162), 1–36. [www.jmlr.org/papers/v25/22-1218.html](https://www.jmlr.org/papers/v25/22-1218.html)
+- Gonzalez, W. D., Joselyn, J. A., Kamide, Y., Kroehl, H. W., Rostoker, G., Tsurutani, B. T., Vasyliunas, V. M. (1994). What is a geomagnetic storm? *Journal of Geophysical Research*, 99(A4), 5771–5792. [doi.org/10.1029/93JA02867](https://doi.org/10.1029/93JA02867)
+- King, J. H., Papitashvili, N. E. (2005). Solar wind spatial scales in and comparisons of hourly Wind and ACE plasma and magnetic field data. *Journal of Geophysical Research*, 110, A02104. [doi.org/10.1029/2004JA010649](https://doi.org/10.1029/2004JA010649)
+- Laperre, B., Amaya, J., Lapenta, G. (2020). Dynamic time warping as a new evaluation for Dst forecast with machine learning. arXiv:2006.04667. [arxiv.org/abs/2006.04667](https://arxiv.org/abs/2006.04667)
+- Newell, P. T., Sotirelis, T., Liou, K., Meng, C.-I., Rich, F. J. (2007). A nearly universal solar wind–magnetosphere coupling function inferred from 10 magnetospheric state variables. *Journal of Geophysical Research*, 112, A01206. [doi.org/10.1029/2006JA012015](https://doi.org/10.1029/2006JA012015)
+- NOAA (2020). Solar Cycle 25 Prediction Panel analysis: minimum between cycles 24 and 25 in December 2019; cycle 24 the weakest in 100 years. [weather.gov/news/201509-solar-cycle](https://weather.gov/news/201509-solar-cycle)
+- O'Brien, T. P., McPherron, R. L. (2000). An empirical phase space analysis of ring current dynamics: Solar wind control of injection and decay. *Journal of Geophysical Research*, 105(A4), 7707–7719. [doi.org/10.1029/1998JA000437](https://doi.org/10.1029/1998JA000437)
+- Sandu, I. C., Beșliu-Ionescu, D. (2026). Operational Dst forecasting across solar cycle using physics-motivated gradient boosting. *Frontiers in Astronomy and Space Sciences*. [www.frontiersin.org/journals/astronomy-and-space-sciences/articles/10.3389/fspas.2026.1835176/full](https://www.frontiersin.org/journals/astronomy-and-space-sciences/articles/10.3389/fspas.2026.1835176/full)
+- World Data Center for Geomagnetism, Kyoto, Nose, M., Iyemori, T., Sugiura, M., Kamei, T. et al. (2015). Geomagnetic Dst index. [doi.org/10.17593/14515-74000](https://doi.org/10.17593/14515-74000)
+- Yu, Zou, Pulkkinen, Chen (2026). Stable multivariate functional time series prediction for major geomagnetic indices. arXiv:2606.14417. [arxiv.org/abs/2606.14417](https://arxiv.org/abs/2606.14417)
