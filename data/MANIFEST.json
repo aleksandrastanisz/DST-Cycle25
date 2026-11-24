@@ -1,0 +1,128 @@
+{
+  "downloaded_at_utc": "2026-11-24T17:14:55+00:00",
+  "sources": {
+    "omni": "https://spdf.gsfc.nasa.gov/pub/data/omni/low_res_omni/omni2_{year}.dat",
+    "omni_format": "https://spdf.gsfc.nasa.gov/pub/data/omni/low_res_omni/omni2.text",
+    "kyoto_hapi": "https://wdc.kugi.kyoto-u.ac.jp/hapi dataset=hour_dst"
+  },
+  "kyoto_hapi": {
+    "HAPI": "3.3.1",
+    "modificationDate": "2026-11-24T17:00:17Z",
+    "timeStampLocation": "center",
+    "resourceID": "doi:10.17593/14515-74000",
+    "title": "Dst Index (Best Available, 1-hour)"
+  },
+  "dst_versions_per_split": {
+    "train": {
+      "final": 131496
+    },
+    "calib": {
+      "final": 87648
+    },
+    "test": {
+      "provisional": 43824,
+      "final": 8784
+    }
+  },
+  "time_alignment": {
+    "lag_hours": 0,
+    "match_fraction": {
+      "-3": 0.07215947980835044,
+      "-2": 0.08993839835728953,
+      "-1": 0.15011978097193704,
+      "0": 1.0,
+      "1": 0.1501206372384054,
+      "2": 0.08993942436030528,
+      "3": 0.07216071459128322
+    }
+  },
+  "splits": {
+    "train": [
+      "1995-01-01",
+      "2009-12-31 23:00"
+    ],
+    "calib": [
+      "2010-01-01",
+      "2019-12-31 23:00"
+    ],
+    "test": [
+      "2020-01-01",
+      "2025-12-31 23:00"
+    ]
+  },
+  "python": "3.12.9",
+  "packages": {
+    "numpy": "2.5.5",
+    "pandas": "3.1.1",
+    "requests": "2.34.2"
+  },
+  "sha256": {
+    "data/raw/kyoto/dst_1995.csv": "8713e961b4568e01279b902f87542ecddf957710b927c65700cd36cccbc839f7",
+    "data/raw/kyoto/dst_1996.csv": "06fa96d8c2273595c65736f014187983a6d4043a3fb6ed5bc9cccfb4ed8f0858",
+    "data/raw/kyoto/dst_1997.csv": "364cccb0ad7daf660312ac845c91ea60daeffefb49812a232468d2936c22663e",
+    "data/raw/kyoto/dst_1998.csv": "5826a54abb3247875a5dad4a7471ec5d03dbdd3e2b6cbbcc2e6f61110844a2ec",
+    "data/raw/kyoto/dst_1999.csv": "bdbb8f0874f1d79428956e7d15fac2dc49b90427caf36833e23cbfa7a2851ee1",
+    "data/raw/kyoto/dst_2000.csv": "8e23a7509813e6de7e188da6320dca855185843d70b69fbc15d2f93f9a4329e5",
+    "data/raw/kyoto/dst_2001.csv": "8389d9deeff2cb85d96f119fc2f35f824f4069395afee3fb7c8ca781fe74d037",
+    "data/raw/kyoto/dst_2002.csv": "6bb93b58023ad2de9f6e631635ca9ff6e4d8b791b60840b3a27cb6ccdab5ea18",
+    "data/raw/kyoto/dst_2003.csv": "dcc7f46e5ca4e7bb5a2d3917b70650f1f28f88569220357a177cdac763e4e540",
+    "data/raw/kyoto/dst_2004.csv": "0183beee013b2fb47e380045b22b9c19e4cd9206945265835ef9b289adaea186",
+    "data/raw/kyoto/dst_2005.csv": "1a8d97a25289d57a183527939f13a245d3300eb08a27f5371b38c067f9286d67",
+    "data/raw/kyoto/dst_2006.csv": "5ca841ded23a2213510e38c093221645b76a66f7fd079a19767bd8e219c11432",
+    "data/raw/kyoto/dst_2007.csv": "0880e3d796529ec73a49e25c1255ee052fbaee88642cca3b08f40a41d6f57a03",
+    "data/raw/kyoto/dst_2008.csv": "b6d7f096c9de8f244e4e788c519db2c996b8cc12358193731b114b04643fe3f5",
+    "data/raw/kyoto/dst_2009.csv": "3e89224d6ca5d0021b3eb27b5b232e8a1d3a6b86b79403c4c714e32c737aea5e",
+    "data/raw/kyoto/dst_2010.csv": "2c2da5ab8c06c532f350527167f47b7426a0b145eefe510ab3ece3e3aaff8825",
+    "data/raw/kyoto/dst_2011.csv": "069c9056b5aa55185ed9e1ee005fb1578838a7ff90f2275b7d1bec317180ddbf",
+    "data/raw/kyoto/dst_2012.csv": "c8f592f4551f8b169b165beaab306aab9501799c80d0aa52165710689a91ff63",
+    "data/raw/kyoto/dst_2013.csv": "66a9b5ce9bbf1df3cedc80f4e32ce3915f5242fcaca2b90f4c91d8d666ea9bf0",
+    "data/raw/kyoto/dst_2014.csv": "bd06343ee2efc42de1b04f401376ad58f79d9f03b612db256df3caa8b2117222",
+    "data/raw/kyoto/dst_2015.csv": "8e253717db40dae11d76ddbfebf5f1403504a80354a394a99280fd9fa37c6617",
+    "data/raw/kyoto/dst_2016.csv": "ce3c08f3cb5411d14f6badc70007bb7101ac108c0f6b52189504de63d999ede8",
+    "data/raw/kyoto/dst_2017.csv": "7269218ee7df2a7790abcb371b9c20f2dd943ececf2eb1a4cf6ff1541e6215f9",
+    "data/raw/kyoto/dst_2018.csv": "18aeda8f7457281ecf850df42da35a1a84f870f75960082830fdcf2819e2facd",
+    "data/raw/kyoto/dst_2019.csv": "d5387b732a35ba05d70471acd3ffb3dc1258d5610a60cde5f3deec86eacfdc37",
+    "data/raw/kyoto/dst_2020.csv": "6338d35f8330959d7ab2e249c5106ca2d84651432d2c28d96acfe9c248fa5d35",
+    "data/raw/kyoto/dst_2021.csv": "26f4786ad15a4fc81648cb2cb9fc66b31ed7e767e5c9b4cc9df44c5ac639b6f7",
+    "data/raw/kyoto/dst_2022.csv": "829ddc5da702915dd0382a7ac9db61b66fa987c815ae2170118e55cdc1dd9ad2",
+    "data/raw/kyoto/dst_2023.csv": "32c1837eb29336d09612f0a77c1da2821c2a83bb0a8da31879a035b1fbde0d6c",
+    "data/raw/kyoto/dst_2024.csv": "126eb41ff570680ebe436130cc16ae5e4b9df0d830875da8bde3666076dba117",
+    "data/raw/kyoto/dst_2025.csv": "90478c7dc3f3bdd02fbc17c58ae3cc5c14e31ce9cb65522b1e214349b56751c0",
+    "data/raw/kyoto/hapi_info.json": "73a5723f3f50d8b26fc146b93d9106fc9e4207855f9943a9895314fd901baf51",
+    "data/raw/omni/omni2.text": "be4aca7bdf030a3eb6ed584fb6960913e3be909d5627b2a69fe93a4765962d7f",
+    "data/raw/omni/omni2_1995.dat": "71d17d51ca92beaea8235b3059736e7e7a471fbf0814c5c8e7d34903ccf1295a",
+    "data/raw/omni/omni2_1996.dat": "943bf2cc51e483bd2cd7ea608e2938a4e7b2b0a76198d401d83ab7248545c059",
+    "data/raw/omni/omni2_1997.dat": "98a68a0c41704384ddc587abf63153fe22aea9bf358787a5e649a938b53a34bd",
+    "data/raw/omni/omni2_1998.dat": "7816dfa8f587c3bafdc5c0bc72230e42f784dbd1d95c17828731cbe24eff93c1",
+    "data/raw/omni/omni2_1999.dat": "68d42e06f43e39093dd12513b34c07fe6be178aa783cedda834da519dbb1486c",
+    "data/raw/omni/omni2_2000.dat": "f707f2c9fd3279839943e049b5eb6bf68a095d8caf9c47eb1a3ec39ef8768c66",
+    "data/raw/omni/omni2_2001.dat": "778393a58ba8e5c5ac677edae058670adeed029d0a38f0c44ffbd28fc8f74555",
+    "data/raw/omni/omni2_2002.dat": "ad0316866abee6f17741e8940d02f8199570ce8a107e2cb45c2eff01972a560a",
+    "data/raw/omni/omni2_2003.dat": "cb1fcee0f95af4c318b239617bbb46f6e41c811bdca8464cf397eb7fd2fb7fc9",
+    "data/raw/omni/omni2_2004.dat": "5538ae44d3476bb84eb963d6892537a085a9707a296cd57d6a1960ea43f89b90",
+    "data/raw/omni/omni2_2005.dat": "9b99d08300d8e2a2cbeaeab073b2e0d83e31b5c925c0f465860430602ad07102",
+    "data/raw/omni/omni2_2006.dat": "27db7ba84a0889b0438fd4428e26128a2235bcf9e30b2a77bf678fab531bf4ea",
+    "data/raw/omni/omni2_2007.dat": "2bdae448301e6de3863e78643178628e3bcd39dee2aea111fe523d1e393217e7",
+    "data/raw/omni/omni2_2008.dat": "3115c8f3c1d28eaca6a4ada84ca2f36865d36d2b2db1c4f8a4c4ba667ac1e274",
+    "data/raw/omni/omni2_2009.dat": "1b8e29b6fd31b6b187dbad5499367526c8b34744f87dcc5aaaedb47c9e50f651",
+    "data/raw/omni/omni2_2010.dat": "5a70010684b553f740b95b31fb56d6ab99b0d545c6f02b11dd84141bbd8b60cb",
+    "data/raw/omni/omni2_2011.dat": "9a93c0e8b563a8ca6ae9c76448d2140ad00574ef65abc7a6504fdad1c3a196ce",
+    "data/raw/omni/omni2_2012.dat": "342612e8ed98fcc5952e4f33e3de92c657d6682728722716d68930b981f87faf",
+    "data/raw/omni/omni2_2013.dat": "46db595b661833960638cb1c44a9c90df55769907bdf1473ad5d9feb68e3d0d9",
+    "data/raw/omni/omni2_2014.dat": "8078580877128e53904084bf22cd712b347deb33c8db5133876baa19be2f57c0",
+    "data/raw/omni/omni2_2015.dat": "aaa291634e011715066ddcf59028e4db16d92495ebca88e4ac034edd1f0f4b19",
+    "data/raw/omni/omni2_2016.dat": "9a2be4f3e975ff307fcfcca5fc1a5d4cb9f04942a0aae47d9c3529303b51c51e",
+    "data/raw/omni/omni2_2017.dat": "b53494bc4fa719da1a5e6914c93307d2c9cfa1fa77abb3883e5925bfc9e0b3bc",
+    "data/raw/omni/omni2_2018.dat": "2f4b43cc5106d856a4765581eaf277f10506c002d72d927b21eca85776ae0b04",
+    "data/raw/omni/omni2_2019.dat": "8f4e57f313687b4fb86865dbb2df06adf414c7e496b99893b86013d91744b48e",
+    "data/raw/omni/omni2_2020.dat": "11c2de98f1fd1ebe0156ca36c439fd4063d28c95e3706ec8752e7f59eea41700",
+    "data/raw/omni/omni2_2021.dat": "c7a68a97abddd6842f26225b6ac5761cdb2f375aca2b5f53b752f7158ed2f211",
+    "data/raw/omni/omni2_2022.dat": "413ac4895d24cab0af4861710c437f12efab44f3cd6c814a614815fa0f2c8d88",
+    "data/raw/omni/omni2_2023.dat": "df74e09c22b126841835c0add8c46933b93118c33a1978f7e977f9488cf7d743",
+    "data/raw/omni/omni2_2024.dat": "41f3b5891ce3f1220719d5c1ea808f3014f28a1704557d3363eefb5ee7c249b1",
+    "data/raw/omni/omni2_2025.dat": "0c1cbad73ad812883a4c1ab49fbe30dda842d65efb89f5c0ea9f3447f9f52a5b",
+    "data/processed/train.parquet": "05316a3f732bcbf41df23d345f95b30efbea3db570b44884b03a91b48921dc01",
+    "data/processed/calib.parquet": "cd72eab435e92493154626962b2796b26703bbc46dc9b22316522db701fab62c",
+    "data/sealed/test.parquet": "48b0a5728d5e0fdc13dec5b3ac8d326947b3c3ad3ed7f9a4c0aea23954c11a8f"
+  }
+}

@@ -1,12 +1,19 @@
-"""Testy logiki pobierania na sztucznych danych (bez sieci).  Uruchom: python -m pytest"""
+"""Tests of the download logic on synthetic data (no network).  Run: python -m pytest"""
 import sys
 from pathlib import Path
 
 import numpy as np
 import pandas as pd
+import pytest
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 import download_data as dd  # noqa: E402
+
+KYOTO_INFO = {
+    "cadence": "PT1H",
+    "timeStampLocation": "center",
+    "parameters": [{"name": "Time"}, {"name": "dstValue", "fill": "99999"}, {"name": "versionCode"}],
+}
 
 
 def omni_line(year, doy, hour, bz=-5.0, v=450.0, dst=-20):
@@ -31,11 +38,27 @@ def test_parse_omni_time_and_fill_values():
 
 
 def test_parse_omni_rejects_wrong_column_count():
-    try:
+    with pytest.raises(ValueError):
         dd.parse_omni("2001 1 0 5.0")
-    except ValueError:
-        return
-    raise AssertionError("powinien odrzucić wiersz z inną liczbą kolumn")
+
+
+def test_parse_kyoto_centre_stamps_versions_and_fill():
+    raw = pd.DataFrame({
+        "Time": ["2020-12-31T23:29:30Z", "2021-01-01T00:29:30Z", "2026-01-01T00:29:30Z"],
+        "dstValue": [-12, 99999, -40],
+        "versionCode": [20, 11, 0],
+    })
+    out = dd.parse_kyoto(raw, KYOTO_INFO)
+    assert out.t_kyoto.tolist() == list(pd.to_datetime(
+        ["2020-12-31 23:00", "2021-01-01 00:00", "2026-01-01 00:00"], utc=True))
+    assert out.dst_version.tolist() == ["final", "provisional", "realtime"]
+    assert np.isnan(out.Dst.iloc[1]) and out.Dst.iloc[0] == -12
+
+
+def test_parse_kyoto_rejects_off_centre_stamps():
+    raw = pd.DataFrame({"Time": ["2020-01-01T00:00:00Z"], "dstValue": [0], "versionCode": [20]})
+    with pytest.raises(SystemExit):
+        dd.parse_kyoto(raw, KYOTO_INFO)
 
 
 def test_align_finds_one_hour_shift():
@@ -43,16 +66,8 @@ def test_align_finds_one_hour_shift():
     rng = np.random.default_rng(0)
     dst = rng.integers(-150, 20, size=len(t)).astype(float)
     omni = pd.DataFrame({"t_start": t, "Dst_omni": dst})
-    # HAPI znakuje koniec godziny: ta sama wartość, znacznik +1 h
+    # Kyoto stamps the end of the hour: same value, timestamp +1 h
     kyoto = pd.DataFrame({"t_kyoto": t + pd.Timedelta(hours=1), "Dst": dst})
     aligned, info = dd.align_kyoto(omni, kyoto)
     assert info["lag_hours"] == -1
-    pd.testing.assert_index_equal(pd.DatetimeIndex(aligned.t_start), t, check_names=False, check_freq=False)
-
-
-def test_label_version_boundaries():
-    ranges = {"final_until_exclusive": pd.Timestamp("2021-01-01", tz="UTC"),
-              "provisional_until_exclusive": pd.Timestamp("2025-07-01", tz="UTC")}
-    t = pd.Series(pd.to_datetime(["2020-12-31 23:00", "2021-01-01 00:00",
-                                  "2025-06-30 23:00", "2025-07-01 00:00"], utc=True))
-    assert dd.label_version(t, ranges).tolist() == ["final", "provisional", "provisional", "realtime"]
+    assert aligned.t_start.tolist() == t.tolist()
