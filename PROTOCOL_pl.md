@@ -221,6 +221,7 @@ M1–M5 raportujemy także osobno dla faz burzy (§6, pkt 6).
 | S4 | M6 i analog H1 względem modelu E | czy wniosek zależy od wyboru punktu odniesienia |
 | S5 | P i X na wszystkich godzinach, w których same mają prognozę (XGBoost obsługuje braki) | czułość na wyłączenia z powodu braków danych |
 | S6 | „zostaw jedną burzę”: każda statystyka konfirmacyjna liczona bez każdego okna burzy silnej z testu po kolei | stabilność rozstrzygnięć |
+| S7 | statystyka H2 z pokryciem na teście liczonym z kwantyli C-Mond z każdej połowy calib osobno (2010–2014 i 2015–2019), czyli przy tej samej wielkości próby kalibracyjnej co M9; raportujemy obie wartości i ich średnią | symetria porównania w H2 |
 | X1 | okna burz, których najniższe minimum przypada 10–11 maja i 10–11 października 2024: M2, M4 i M8 | eksploracyjny, wyłącznie opisowo |
 | X2 | M1–M3 dla wszystkich modeli i metod przedziałów, osobno dla 2020 (Dst ostateczny) i 2021–2025 (Dst wstępny); kategorie bez okien w danym okresie pomijamy | eksploracyjny; wpływ wersji etykiet (§3, pkt 1) |
 | X3 | odpowiedniki H1–H3 dla kategorii superintensywnej | wyłącznie opisowo |
@@ -241,9 +242,9 @@ Wykonywane na prognozach poza foldem (out-of-fold) z walidacji krzyżowej wybran
 3. **Kontrola negatywna:** X trenowany na celu losowo przetasowanym w obrębie train nie może być lepszy od prognozy stałej (średniej z train) o więcej niż 1% MSE.
 4. **Model E:** (a) test jednostkowy: przy stałym wymuszaniu VBs = 5 mV/m i Pdyn = 2 nPa `Dst*` zbiega do stanu ustalonego `Q·τ` z dokładnością 1%; sprawdza jednostki (VBs w mV/m, Pdyn w nPa) i całkowanie. (b) Korelacja prognozy z obserwacją > 0,8 dla h = 1 h; to tylko kontrola, że model jest podłączony, bo przy h = 1 h korelacja wynika głównie z `Dst(t)`.
 
-**Analiza S1–S5, A1–A4 i X1–X4** jest opisowa, bez testów hipotez: estymata punktowa i 95% przedział bootstrapowy (§10).
+**Analiza S1–S5, S7, A1–A4 i X1–X4** jest opisowa, bez testów hipotez: estymata punktowa i 95% przedział bootstrapowy (§10).
 
-**Kolejność przebiegów** (najpierw najważniejsze dla interpretacji): strojenie, R0, P0, E-main, S6, A1, A4, S5, S2, S4, A2, A3, S1, S3, X4, X1, X3, X2.
+**Kolejność przebiegów** (najpierw najważniejsze dla interpretacji): strojenie, R0, P0, E-main, S6, S7, A1, A4, S5, S2, S4, A2, A3, S1, S3, X4, X1, X3, X2.
 
 ## 10. Statystyka i reguły decyzyjne
 
@@ -321,6 +322,7 @@ P0 wykonujemy po zamrożeniu protokołu, przed oceną na teście. Jest wyłączn
 | Słaby cykl kalibracji (24.) wobec silniejszego testowego (25.) | §3, pkt 5; zawężone sformułowanie wniosku z H2 (§12) |
 | Dst na wejściu w wersji lepszej niż dostępna operacyjnie | §3, pkt 2; trafność przy h = 1 h jako górna granica (§12) |
 | Hiperparametry dobrane pod warunki spokojne | Walidacja krzyżowa blokami lat zamiast okresu minimum słonecznego (§7.2) |
+| Asymetria w H2: M9 korzysta z kwantyli z połowy calib (5 lat), a test z całego calib (10 lat). Mniejsza próba daje ostrożniejsze kwantyle i większy rozrzut, więc M9 może być lekko zawyżone, co sprzyja H2; bootstrap po burzach nie obejmuje niepewności reszt kalibracyjnych | Nazwane jako ograniczenie; S7 liczy pokrycie na teście przy tej samej wielkości próby kalibracyjnej co M9 |
 | Asymetria w H3: C-DtACI bez podziału na klasy, C-Mond z podziałem | Nazwana jako ograniczenie; wariant łączony poza zakresem |
 | Reszty godzinowe nie są wymienialne (autokorelacja) | Gwarancja C-split i C-Mond nie jest dokładna już na calib; raportujemy pokrycie na calib jako kontrolę |
 | Hiperparametry strojone tylko na 23. cyklu | Ograniczenie; równy budżet strojenia dla X i L (§7.2) |
@@ -333,7 +335,7 @@ P0 wykonujemy po zamrożeniu protokołu, przed oceną na teście. Jest wyłączn
 
 ## 12. Zakres wniosków
 
-Wnioski dotyczą: prognoz Dst z horyzontem 1 h i 6 h, danych OMNI i Kyoto z §5, modeli P, E, X i L zbudowanych w tym projekcie, wytrenowanych na latach 1995–2009 i ocenionych na latach 2020–2025, metod przedziałów z §2 oraz definicji burz z §6. **Nie dotyczą** prognozy operacyjnej na danych z L1 w czasie rzeczywistym, innych indeksów (SYM-H, Kp), dłuższych horyzontów ani modeli niewymienionych w §2. Wnioski o burzach superintensywnych (≤ −250 nT) są opisowe. Wniosek z H2 dotyczy przejścia ze słabego 24. cyklu na silniejszy 25. (§3, pkt 5). Trafność przy h = 1 h jest górną granicą także dlatego, że Dst na wejściu nie jest wersją czasu rzeczywistego (§3, pkt 2).
+Wnioski dotyczą: prognoz Dst z horyzontem 1 h i 6 h, danych OMNI i Kyoto z §5, modeli P, E, X i L zbudowanych w tym projekcie, wytrenowanych na latach 1995–2009 i ocenionych na latach 2020–2025, metod przedziałów z §2 oraz definicji burz z §6. **Nie dotyczą** prognozy operacyjnej na danych z L1 w czasie rzeczywistym, innych indeksów (SYM-H, Kp), dłuższych horyzontów ani modeli niewymienionych w §2. Wnioski o burzach superintensywnych (≤ −250 nT) są opisowe. Wniosek z H2 dotyczy przejścia ze słabego 24. cyklu na silniejszy 25. (§3, pkt 5). Trafność przy h = 1 h jest górną granicą także dlatego, że Dst na wejściu nie jest wersją czasu rzeczywistego (§3, pkt 2). Modele nie widzą danych z 24. cyklu: są trenowane na latach 1995–2009 i ocenione na 2020–2025 bez douczania, więc wnioski z H1 dotyczą modeli z ponad dziesięcioletnią przerwą w danych treningowych; model operacyjny byłby douczany na nowszych danych.
 
 **Porównanie z literaturą** (m.in. Sandu i Beșliu-Ionescu 2026, Yu i in. 2026) jest wyłącznie opisowe i odbywa się w dyskusji, po ocenie końcowej. Różnice w okresach testowych, wersjach Dst i metrykach sprawiają, że liczby nie są bezpośrednio porównywalne; nie wpływa ono na żadne rozstrzygnięcie.
 
@@ -343,6 +345,8 @@ Wnioski dotyczą: prognoz Dst z horyzontem 1 h i 6 h, danych OMNI i Kyoto z §5,
 |---|---|---|---|
 | 2026-11-24 | Ujawnienie (przed zamrożeniem): przy sprawdzaniu formatu pobranych plików Kyoto wyświetlono pierwsze i ostatnie wiersze plików z lat 2020, 2021, 2024 i 2025 (łącznie 8 godzinowych wartości Dst) oraz liczności kodów wersji w tych latach | Przejrzystość | Znikomy; żaden model nie był oceniany, definicje burz, reguły i progi nie zależą od tych wartości |
 | 2026-11-24 | Dopisanie DOI zarchiwizowanego protokołu w Zenodo do §14 | Publiczny, niezmienialny znacznik czasu zamrożonego protokołu | Brak |
+| 2026-11-24 | Nowy wiersz w §11 (asymetria wielkości próby kalibracyjnej w H2) i eksperyment S7 w §9 | Przegląd protokołu po zamrożeniu: M9 i test korzystają z kwantyli z prób o różnej wielkości | Eksploracyjne; reguła H2 bez zmian; dodane przed jakimkolwiek treningiem |
+| 2026-11-24 | Zdanie w §12 o braku douczania modeli na danych z 24. cyklu | Przegląd protokołu po zamrożeniu: zakres wniosków z H1 | Brak; doprecyzowanie zakresu wniosków |
 
 Zmiany przed zamrożeniem są widoczne w historii Git. Każde użycie danych testowych przed oceną końcową, także w testach kodu, jest ujawniane w tej tabeli, nawet gdy żaden model nie był na nich oceniany.
 

@@ -221,6 +221,7 @@ M1–M5 are also reported separately for storm phases (§6, item 6).
 | S4 | M6 and an H1 analogue relative to model E | whether conclusions depend on the choice of reference |
 | S5 | P and X on all hours for which they themselves produce a forecast (XGBoost handles missing values) | sensitivity to missing-data exclusions |
 | S6 | leave-one-storm-out: every confirmatory statistic recomputed without each intense-storm window of the test period in turn | stability of decisions |
+| S7 | the H2 statistic with test coverage computed from C-Mond quantiles of each calib half separately (2010–2014 and 2015–2019), that is with the same calibration-sample size as M9; both values and their mean are reported | symmetry of the H2 comparison |
 | X1 | storm windows whose lowest minimum falls on 10–11 May or 10–11 October 2024: M2, M4 and M8 | exploratory, descriptive only |
 | X2 | M1–M3 for all models and interval methods, separately for 2020 (final Dst) and 2021–2025 (provisional Dst); categories without windows in a period are omitted | exploratory; effect of the label version (§3, item 1) |
 | X3 | H1–H3 counterparts for the superintense category | descriptive only |
@@ -241,9 +242,9 @@ Run on out-of-fold predictions from cross-validation of the selected configurati
 3. **Negative control:** X trained on a target randomly shuffled within train must not beat a constant forecast (the train mean) by more than 1% in MSE.
 4. **Model E:** (a) unit test: under constant driving VBs = 5 mV/m and Pdyn = 2 nPa, `Dst*` converges to the steady state `Q·τ` within 1%; this checks units (VBs in mV/m, Pdyn in nPa) and the integration. (b) Correlation between forecast and observation > 0.8 at h = 1 h; this only checks that the model is wired in, because at h = 1 h the correlation comes mainly from `Dst(t)`.
 
-**Analysis of S1–S5, A1–A4 and X1–X4** is descriptive, without hypothesis tests: point estimate and 95% bootstrap interval (§10).
+**Analysis of S1–S5, S7, A1–A4 and X1–X4** is descriptive, without hypothesis tests: point estimate and 95% bootstrap interval (§10).
 
-**Run order** (most important for interpretation first): tuning, R0, P0, E-main, S6, A1, A4, S5, S2, S4, A2, A3, S1, S3, X4, X1, X3, X2.
+**Run order** (most important for interpretation first): tuning, R0, P0, E-main, S6, S7, A1, A4, S5, S2, S4, A2, A3, S1, S3, X4, X1, X3, X2.
 
 ## 10. Statistics and decision rules
 
@@ -321,6 +322,7 @@ P0 is run after the protocol is frozen, before the test evaluation. It is inform
 | Weak calibration cycle (24) versus a stronger test cycle (25) | §3, item 5; narrowed wording of the H2 conclusion (§12) |
 | Dst input in a better version than is available operationally | §3, item 2; skill at h = 1 h as an upper bound (§12) |
 | Hyperparameters chosen for quiet conditions | Cross-validation over blocks of years instead of a solar-minimum period (§7.2) |
+| Asymmetry in H2: M9 uses quantiles from half of calib (5 years), the test from all of calib (10 years). A smaller sample gives more conservative quantiles and more spread, so M9 may be slightly inflated, which favours H2; the storm-level bootstrap does not cover the uncertainty of the calibration residuals | Stated as a limitation; S7 computes test coverage with the same calibration-sample size as M9 |
 | Asymmetry in H3: C-DtACI without classes, C-Mond with classes | Stated as a limitation; a combined variant is out of scope |
 | Hourly residuals are not exchangeable (autocorrelation) | The C-split and C-Mond guarantees are not exact even on calib; coverage on calib is reported as a check |
 | Hyperparameters tuned on cycle 23 only | Limitation; equal tuning budget for X and L (§7.2) |
@@ -333,7 +335,7 @@ P0 is run after the protocol is frozen, before the test evaluation. It is inform
 
 ## 12. Scope of conclusions
 
-Conclusions apply to: Dst forecasts at horizons of 1 h and 6 h, the OMNI and Kyoto data in §5, models P, E, X and L built in this project, trained on 1995–2009 and evaluated on 2020–2025, the interval methods in §2, and the storm definitions in §6. They **do not apply** to operational forecasting from real-time L1 data, other indices (SYM-H, Kp), longer horizons, or models not listed in §2. Conclusions about superintense storms (≤ −250 nT) are descriptive. The H2 conclusion concerns the move from the weak cycle 24 to the stronger cycle 25 (§3, item 5). Skill at h = 1 h is an upper bound also because the Dst input is not the real-time version (§3, item 2).
+Conclusions apply to: Dst forecasts at horizons of 1 h and 6 h, the OMNI and Kyoto data in §5, models P, E, X and L built in this project, trained on 1995–2009 and evaluated on 2020–2025, the interval methods in §2, and the storm definitions in §6. They **do not apply** to operational forecasting from real-time L1 data, other indices (SYM-H, Kp), longer horizons, or models not listed in §2. Conclusions about superintense storms (≤ −250 nT) are descriptive. The H2 conclusion concerns the move from the weak cycle 24 to the stronger cycle 25 (§3, item 5). Skill at h = 1 h is an upper bound also because the Dst input is not the real-time version (§3, item 2). The models never see cycle 24 data: they are trained on 1995–2009 and evaluated on 2020–2025 without retraining, so conclusions from H1 concern models with a gap of more than a decade in their training data; an operational model would be retrained on more recent data.
 
 **Comparison with the literature** (e.g. Sandu and Beșliu-Ionescu 2026, Yu et al. 2026) is descriptive only and takes place in the discussion, after the final evaluation. Differences in test periods, Dst versions and metrics mean the numbers are not directly comparable; it does not affect any decision.
 
@@ -343,6 +345,8 @@ Conclusions apply to: Dst forecasts at horizons of 1 h and 6 h, the OMNI and Kyo
 |---|---|---|---|
 | 2026-11-24 | Disclosure (before freezing): while checking the format of the downloaded Kyoto files, the first and last rows of the 2020, 2021, 2024 and 2025 files (8 hourly Dst values in total) and the counts of version codes in those years were displayed | Transparency | Negligible; no model was evaluated, and storm definitions, rules and thresholds do not depend on these values |
 | 2026-11-24 | Zenodo DOI of the archived protocol added to §14 | Public, immutable timestamp of the frozen protocol | None |
+| 2026-11-24 | New row in §11 (asymmetric calibration-sample size in H2) and experiment S7 in §9 | Post-freeze review: M9 and the test use quantiles from samples of different size | Exploratory; H2 rule unchanged; added before any training |
+| 2026-11-24 | Sentence in §12 on the models not being retrained on cycle 24 data | Post-freeze review: scope of H1 conclusions | None; clarifies the scope of conclusions |
 
 Changes made before freezing are visible in the Git history. Any use of test data before the final evaluation, including in code tests, is disclosed in this table, even if no model was evaluated on it.
 
