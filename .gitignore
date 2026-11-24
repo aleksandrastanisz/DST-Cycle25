@@ -1,0 +1,12 @@
+# dane pobiera skrypt; do repozytorium trafia tylko data/MANIFEST.json z sumami SHA-256
+data/*
+!data/MANIFEST.json
+
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+.idea/
+.idea/workspace.xml
+.idea/shelf/
