@@ -1,6 +1,6 @@
 # PROTOCOL: prognozy Dst i pokrycie przedziałów niepewności w burzach 25. cyklu Słońca
 
-**Wersja:** 1.0 (zamrożona), 2026-11-24
+**Wersja:** 1.1 (zamrożona), 2026-11-24. Poprzednia: 1.0, 2026-11-24, [10.5281/zenodo.24511114](https://doi.org/10.5281/zenodo.24511114). Różnice opisuje §13.
 
 **Status:** zamrożony przed pierwszym treningiem i przed jakąkolwiek oceną na danych testowych. Każda kolejna zmiana wymaga wpisu w §13 (data, powód, wpływ).
 
@@ -347,6 +347,7 @@ Wnioski dotyczą: prognoz Dst z horyzontem 1 h i 6 h, danych OMNI i Kyoto z §5,
 | 2026-11-24 | Dopisanie DOI zarchiwizowanego protokołu w Zenodo do §14 | Publiczny, niezmienialny znacznik czasu zamrożonego protokołu | Brak |
 | 2026-11-24 | Nowy wiersz w §11 (asymetria wielkości próby kalibracyjnej w H2) i eksperyment S7 w §9 | Przegląd protokołu po zamrożeniu: M9 i test korzystają z kwantyli z prób o różnej wielkości | Eksploracyjne; reguła H2 bez zmian; dodane przed jakimkolwiek treningiem |
 | 2026-11-24 | Zdanie w §12 o braku douczania modeli na danych z 24. cyklu | Przegląd protokołu po zamrożeniu: zakres wniosków z H1 | Brak; doprecyzowanie zakresu wniosków |
+| 2026-11-24 | Wydanie wersji 1.1 (tag `protocol-v1.1`, nowa wersja archiwum w Zenodo) | Zebranie zmian z przeglądu po zamrożeniu w jednej wersji archiwalnej, przed pierwszym treningiem | Brak |
 
 Zmiany przed zamrożeniem są widoczne w historii Git. Każde użycie danych testowych przed oceną końcową, także w testach kodu, jest ujawniane w tej tabeli, nawet gdy żaden model nie był na nich oceniany.
 
@@ -356,12 +357,12 @@ Zmiany przed zamrożeniem są widoczne w historii Git. Każde użycie danych tes
 - Wszystkie parametry modeli, przedziałów i bootstrapu w `configs/*.yaml`. Raport zawiera hash konfiguracji i commita.
 - Dokładne wersje wszystkich pakietów (`pip freeze`) zapisujemy w repozytorium przed strojeniem i nie zmieniamy ich do końca oceny; zmiana wersji to wpis w §13.
 - Testy automatyczne: parser OMNI i wartości braku, wyrównanie godzin, rozłączność podziałów, definicja okien burz na danych syntetycznych, przyczynowość każdej cechy (zmiana danych po chwili t nie zmienia cechy w chwili t), opóźnienie informacji zwrotnej w C-ACI i C-DtACI, stan ustalony modelu E przy stałym wymuszaniu, zgodność implementacji C-DtACI z przykładem z pracy Gibbsa i Candèsa.
-- Skrypt oceny końcowej odmawia działania, jeśli suma SHA-256 pliku `data/sealed/test.parquet` nie zgadza się z `MANIFEST.json` albo bieżący commit nie jest potomkiem tagu `protocol-v1.0`.
+- Skrypt oceny końcowej odmawia działania, jeśli suma SHA-256 pliku `data/sealed/test.parquet` nie zgadza się z `MANIFEST.json` albo bieżący commit nie jest potomkiem tagu najnowszej wersji protokołu (obecnie `protocol-v1.1`).
 - Implementacja bootstrapu, korekty Holma i reguł z §10 jest sprawdzona na danych syntetycznych o znanym efekcie (z efektem i bez) przed oceną końcową.
 - Każdy przebieg zapisuje na starcie commit i flagę zmian niezacommitowanych. Przebiegi E-main i ablacji uruchamiamy wyłącznie z czystego repozytorium.
 - XGBoost na CPU jest powtarzalny przy tym samym seedzie; trening LSTM na GPU nie jest bitowo powtarzalny (X4 mierzy skalę różnic).
 - `scripts/make_tables.py` odtwarza każdą tabelę i rysunek z zapisanych prognoz, bez ręcznych kroków.
-- Zamrożony protokół z kodem archiwizujemy w Zenodo w chwili zamrożenia; wyniki kroków zaplanowanych po zamrożeniu (§15), w tym R0 i P0, w kolejnej wersji archiwum, przed jakąkolwiek oceną na teście. Wersja `protocol-v1.0`: [10.5281/zenodo.24511114](https://doi.org/10.5281/zenodo.24511114); wszystkie wersje: [10.5281/zenodo.24511113](https://doi.org/10.5281/zenodo.24511113).
+- Zamrożony protokół z kodem archiwizujemy w Zenodo w chwili zamrożenia; wyniki kroków zaplanowanych po zamrożeniu (§15), w tym R0 i P0, w kolejnej wersji archiwum, przed jakąkolwiek oceną na teście. Wersja `protocol-v1.0`: [10.5281/zenodo.24511114](https://doi.org/10.5281/zenodo.24511114); wersja `protocol-v1.1`: DOI dopisywany po wydaniu; wszystkie wersje: [10.5281/zenodo.24511113](https://doi.org/10.5281/zenodo.24511113).
 
 ## 15. Decyzje przed zamrożeniem (rozstrzygnięte)
 

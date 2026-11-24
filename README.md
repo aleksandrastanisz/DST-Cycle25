@@ -6,7 +6,7 @@ Do machine-learning forecasts of the Dst index add anything beyond persistence d
 
 Models are trained on 1995–2009 (mainly solar cycle 23), conformal intervals are calibrated on 2010–2019 (cycle 24), and evaluation happens once, under a frozen protocol, on cycle 25 (2020–2025).
 
-**Status:** protocol v1.0 frozen on 2026-11-24, before the first training run, and archived on Zenodo ([10.5281/zenodo.24511114](https://doi.org/10.5281/zenodo.24511114)); no model has been evaluated on test data.
+**Status:** protocol v1.1, frozen on 2026-11-24 before the first training run and archived on Zenodo (all versions: [10.5281/zenodo.24511113](https://doi.org/10.5281/zenodo.24511113)); no model has been evaluated on test data. Changes since v1.0 are listed in the deviations log (protocol section 13).
 
 ## Protocol
 
