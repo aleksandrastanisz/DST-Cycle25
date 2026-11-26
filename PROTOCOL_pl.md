@@ -225,7 +225,7 @@ M1–M5 raportujemy także osobno dla faz burzy (§6, pkt 6).
 | X1 | okna burz, których najniższe minimum przypada 10–11 maja i 10–11 października 2024: M2, M4 i M8 | eksploracyjny, wyłącznie opisowo |
 | X2 | M1–M3 dla wszystkich modeli i metod przedziałów, osobno dla 2020 (Dst ostateczny) i 2021–2025 (Dst wstępny); kategorie bez okien w danym okresie pomijamy | eksploracyjny; wpływ wersji etykiet (§3, pkt 1) |
 | X3 | odpowiedniki H1–H3 dla kategorii superintensywnej | wyłącznie opisowo |
-| X4 | jedno powtórzenie treningu L (seed 42, oba horyzonty) z tą samą konfiguracją | skala szumu między przebiegami z niedeterminizmu GPU; wyłącznie opisowo |
+| X4 | jedno powtórzenie treningu L (seed 42, oba horyzonty) z tą samą konfiguracją | skala szumu między przebiegami z niedeterminizmu treningu (wielowątkowe CPU); wyłącznie opisowo |
 | A1 | X i L bez żadnych wejść z Dst (X bez grupy „stan prądu pierścieniowego”, L bez kanału Dst) | ablacja: czy przewaga nad persystencją pochodzi z wiatru słonecznego, czy z przedłużania bieżącego Dst |
 | A2 | X bez grupy „sprzężenie” | ablacja: wkład funkcji sprzężenia |
 | A3 | X bez grupy „historia wymuszania” | ablacja: wkład energii zgromadzonej przed chwilą t |
@@ -331,7 +331,7 @@ P0 wykonujemy po zamrożeniu protokołu, przed oceną na teście. Jest wyłączn
 | Rewizje danych po pobraniu | Jednorazowe pobranie, sumy SHA-256 i data w `MANIFEST.json` |
 | Przewaga ML wynika z przedłużania bieżącego Dst, a nie z fizyki wymuszania | A1 i A4; kontrola M7 |
 | Błąd w implementacji statystyki | Kod z §10 sprawdzony na danych syntetycznych o znanym efekcie przed oceną końcową (§14) |
-| Niedeterminizm treningu na GPU | X4 jako miara szumu; prognoza jako średnia z 5 seedów |
+| Niedeterminizm treningu LSTM (wielowątkowe CPU) | X4 jako miara szumu; prognoza jako średnia z 5 seedów |
 
 ## 12. Zakres wniosków
 
@@ -349,6 +349,8 @@ Wnioski dotyczą: prognoz Dst z horyzontem 1 h i 6 h, danych OMNI i Kyoto z §5,
 | 2026-11-24 | Zdanie w §12 o braku douczania modeli na danych z 24. cyklu | Przegląd protokołu po zamrożeniu: zakres wniosków z H1 | Brak; doprecyzowanie zakresu wniosków |
 | 2026-11-24 | Wydanie wersji 1.1 (tag `protocol-v1.1`, nowa wersja archiwum w Zenodo) | Zebranie zmian z przeglądu po zamrożeniu w jednej wersji archiwalnej, przed pierwszym treningiem | Brak |
 | 2026-11-24 | Dopisanie DOI wersji 1.1 w Zenodo do §14 | Publiczny, niezmienialny znacznik czasu wersji 1.1 | Brak |
+| 2026-11-26 | Realizacja kroku 1 z §15: test dymny (`scripts/smoke_test.py`) na CPU Intel Core i5-1135G7 (4 rdzenie, 8 wątków), xgboost 3.4.1, torch 2.15.0 (CPU); jeden fold walidacji krzyżowej (blok 2001–2003), h = 1 h. XGBoost 0,1–0,2 min na trening (około 20 min na 170 treningów); LSTM 0,1–0,3 min na epokę (około 8–38 h na 142 treningi przy 20–100 epokach). Dokładne wersje pakietów zapisane w `requirements-lock.txt` | Plan z §15 | Brak; tylko dane treningowe, bez wypisywania błędów walidacyjnych |
+| 2026-11-26 | Trening LSTM na CPU zamiast na GPU (zmiany w §9 przy X4, w §11, §14 i §15) | Laptop nie ma karty NVIDIA; szacowany czas jest akceptowalny, a jeden komputer i jedno środowisko dla wszystkich modeli ogranicza ryzyko różnic między maszynami | Wielowątkowy trening na CPU też nie musi być bitowo powtarzalny; X4 bez zmian mierzy skalę różnic między przebiegami. Hipotezy i reguły bez zmian |
 
 Zmiany przed zamrożeniem są widoczne w historii Git. Każde użycie danych testowych przed oceną końcową, także w testach kodu, jest ujawniane w tej tabeli, nawet gdy żaden model nie był na nich oceniany.
 
@@ -356,12 +358,12 @@ Zmiany przed zamrożeniem są widoczne w historii Git. Każde użycie danych tes
 
 - Dane: `scripts/download_data.py`, uruchamiany raz; `data/MANIFEST.json` z datą pobrania, adresami, licznościami wersji Dst w każdym zbiorze, przesunięciem godzin, wersjami pakietów i sumami SHA-256.
 - Wszystkie parametry modeli, przedziałów i bootstrapu w `configs/*.yaml`. Raport zawiera hash konfiguracji i commita.
-- Dokładne wersje wszystkich pakietów (`pip freeze`) zapisujemy w repozytorium przed strojeniem i nie zmieniamy ich do końca oceny; zmiana wersji to wpis w §13.
+- Dokładne wersje wszystkich pakietów (`pip freeze`) zapisujemy w repozytorium (`requirements-lock.txt`) przed strojeniem i nie zmieniamy ich do końca oceny; zmiana wersji to wpis w §13.
 - Testy automatyczne: parser OMNI i wartości braku, wyrównanie godzin, rozłączność podziałów, definicja okien burz na danych syntetycznych, przyczynowość każdej cechy (zmiana danych po chwili t nie zmienia cechy w chwili t), opóźnienie informacji zwrotnej w C-ACI i C-DtACI, stan ustalony modelu E przy stałym wymuszaniu, zgodność implementacji C-DtACI z przykładem z pracy Gibbsa i Candèsa.
 - Skrypt oceny końcowej odmawia działania, jeśli suma SHA-256 pliku `data/sealed/test.parquet` nie zgadza się z `MANIFEST.json` albo bieżący commit nie jest potomkiem tagu najnowszej wersji protokołu (obecnie `protocol-v1.1`).
 - Implementacja bootstrapu, korekty Holma i reguł z §10 jest sprawdzona na danych syntetycznych o znanym efekcie (z efektem i bez) przed oceną końcową.
 - Każdy przebieg zapisuje na starcie commit i flagę zmian niezacommitowanych. Przebiegi E-main i ablacji uruchamiamy wyłącznie z czystego repozytorium.
-- XGBoost na CPU jest powtarzalny przy tym samym seedzie; trening LSTM na GPU nie jest bitowo powtarzalny (X4 mierzy skalę różnic).
+- XGBoost na CPU jest powtarzalny przy tym samym seedzie. LSTM trenujemy na CPU (§13, 2026-11-26); wielowątkowy trening nie musi być bitowo powtarzalny (X4 mierzy skalę różnic).
 - `scripts/make_tables.py` odtwarza każdą tabelę i rysunek z zapisanych prognoz, bez ręcznych kroków.
 - Zamrożony protokół z kodem archiwizujemy w Zenodo w chwili zamrożenia; wyniki kroków zaplanowanych po zamrożeniu (§15), w tym R0 i P0, w kolejnej wersji archiwum, przed jakąkolwiek oceną na teście. Wersja `protocol-v1.0`: [10.5281/zenodo.24511114](https://doi.org/10.5281/zenodo.24511114); wersja `protocol-v1.1`: [10.5281/zenodo.24511920](https://doi.org/10.5281/zenodo.24511920); wszystkie wersje: [10.5281/zenodo.24511113](https://doi.org/10.5281/zenodo.24511113).
 
@@ -396,7 +398,7 @@ Zmiany przed zamrożeniem są widoczne w historii Git. Każde użycie danych tes
 
 **Kroki zaplanowane po zamrożeniu, przed oceną na teście** (wyniki wpisywane do §13 jako realizacja planu, nie odstępstwa):
 
-1. Szacunek czasu obliczeń po teście dymnym na GTX 1660.
+1. Szacunek czasu obliczeń po teście dymnym.
 2. Strojenie i R0 (§7.2, §9.1).
 3. Liczności klas C-Mond na calib i łączenie klas według reguły z §7.3.
 4. P0 (§10.4).

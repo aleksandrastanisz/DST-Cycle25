@@ -225,7 +225,7 @@ M1–M5 are also reported separately for storm phases (§6, item 6).
 | X1 | storm windows whose lowest minimum falls on 10–11 May or 10–11 October 2024: M2, M4 and M8 | exploratory, descriptive only |
 | X2 | M1–M3 for all models and interval methods, separately for 2020 (final Dst) and 2021–2025 (provisional Dst); categories without windows in a period are omitted | exploratory; effect of the label version (§3, item 1) |
 | X3 | H1–H3 counterparts for the superintense category | descriptive only |
-| X4 | one repeat of training L (seed 42, both horizons) with the same configuration | scale of run-to-run noise from GPU nondeterminism; descriptive only |
+| X4 | one repeat of training L (seed 42, both horizons) with the same configuration | scale of run-to-run noise from training nondeterminism (multithreaded CPU); descriptive only |
 | A1 | X and L without any Dst inputs (X without the "ring-current state" group, L without the Dst channel) | ablation: whether the advantage over persistence comes from the solar wind or from extending current Dst |
 | A2 | X without the "coupling" group | ablation: contribution of the coupling functions |
 | A3 | X without the "driving history" group | ablation: contribution of energy loaded before time t |
@@ -331,7 +331,7 @@ P0 is run after the protocol is frozen, before the test evaluation. It is inform
 | Data revisions after download | Single download, SHA-256 checksums and date in `MANIFEST.json` |
 | The ML advantage comes from extending current Dst rather than from the physics of driving | A1 and A4; M7 check |
 | A bug in the statistics implementation | The §10 code is validated on synthetic data with a known effect before the final evaluation (§14) |
-| Nondeterminism of GPU training | X4 as a noise measure; forecast as the mean of 5 seeds |
+| Nondeterminism of LSTM training (multithreaded CPU) | X4 as a noise measure; forecast as the mean of 5 seeds |
 
 ## 12. Scope of conclusions
 
@@ -349,6 +349,8 @@ Conclusions apply to: Dst forecasts at horizons of 1 h and 6 h, the OMNI and Kyo
 | 2026-11-24 | Sentence in §12 on the models not being retrained on cycle 24 data | Post-freeze review: scope of H1 conclusions | None; clarifies the scope of conclusions |
 | 2026-11-24 | Release of version 1.1 (tag `protocol-v1.1`, new archive version on Zenodo) | Collecting the post-freeze review changes into one archived version, before the first training run | None |
 | 2026-11-24 | Zenodo DOI of version 1.1 added to §14 | Public, immutable timestamp of version 1.1 | None |
+| 2026-11-26 | Execution of step 1 in §15: smoke test (`scripts/smoke_test.py`) on an Intel Core i5-1135G7 CPU (4 cores, 8 threads), xgboost 3.4.1, torch 2.15.0 (CPU); one cross-validation fold (block 2001–2003), h = 1 h. XGBoost 0.1–0.2 min per run (about 20 min for 170 runs); LSTM 0.1–0.3 min per epoch (about 8–38 h for 142 runs at 20–100 epochs). Exact package versions saved in `requirements-lock.txt` | Plan in §15 | None; train data only, no validation errors printed |
+| 2026-11-26 | LSTM trained on CPU instead of GPU (changes in §9 for X4, in §11, §14 and §15) | The laptop has no NVIDIA GPU; the estimated time is acceptable, and one machine and one environment for all models limit the risk of differences between machines | Multithreaded CPU training is not necessarily bitwise reproducible either; X4 still measures run-to-run differences. Hypotheses and rules unchanged |
 
 Changes made before freezing are visible in the Git history. Any use of test data before the final evaluation, including in code tests, is disclosed in this table, even if no model was evaluated on it.
 
@@ -356,12 +358,12 @@ Changes made before freezing are visible in the Git history. Any use of test dat
 
 - Data: `scripts/download_data.py`, run once; `data/MANIFEST.json` with download date, URLs, Dst version counts per split, hour offset, package versions and SHA-256 checksums.
 - All model, interval and bootstrap parameters in `configs/*.yaml`. The report includes the config and commit hashes.
-- Exact versions of all packages (`pip freeze`) are saved in the repository before tuning and are not changed until the evaluation is complete; a version change is an entry in §13.
+- Exact versions of all packages (`pip freeze`) are saved in the repository (`requirements-lock.txt`) before tuning and are not changed until the evaluation is complete; a version change is an entry in §13.
 - Automated tests: OMNI parser and fill values, hour alignment, split disjointness, storm-window definition on synthetic data, causality of every feature (changing data after time t does not change the feature at time t), feedback delay in C-ACI and C-DtACI, steady state of model E under constant driving, agreement of the C-DtACI implementation with an example from Gibbs and Candès.
 - The final evaluation script refuses to run if the SHA-256 of `data/sealed/test.parquet` does not match `MANIFEST.json` or the current commit is not a descendant of the tag of the latest protocol version (currently `protocol-v1.1`).
 - The implementation of the bootstrap, Holm correction and rules in §10 is validated on synthetic data with a known effect (with and without an effect) before the final evaluation.
 - Every run records the commit and an uncommitted-changes flag at start. E-main and ablation runs are launched only from a clean repository.
-- XGBoost on CPU is reproducible with the same seed; LSTM training on GPU is not bitwise reproducible (X4 measures the scale of differences).
+- XGBoost on CPU is reproducible with the same seed. LSTM is trained on CPU (§13, 2026-11-26); multithreaded training is not necessarily bitwise reproducible (X4 measures the scale of differences).
 - `scripts/make_tables.py` regenerates every table and figure from saved forecasts, without manual steps.
 - The frozen protocol with the code is archived on Zenodo at freezing; the results of the steps planned after freezing (§15), including R0 and P0, go into a later version of the archive, before any evaluation on the test split. Version `protocol-v1.0`: [10.5281/zenodo.24511114](https://doi.org/10.5281/zenodo.24511114); version `protocol-v1.1`: [10.5281/zenodo.24511920](https://doi.org/10.5281/zenodo.24511920); all versions: [10.5281/zenodo.24511113](https://doi.org/10.5281/zenodo.24511113).
 
@@ -396,7 +398,7 @@ Changes made before freezing are visible in the Git history. Any use of test dat
 
 **Steps planned after freezing, before the test evaluation** (results recorded in §13 as execution of the plan, not as deviations):
 
-1. Compute-time estimate after a smoke test on a GTX 1660.
+1. Compute-time estimate after a smoke test.
 2. Tuning and R0 (§7.2, §9.1).
 3. C-Mond class sizes on calib and class merging under the rule in §7.3.
 4. P0 (§10.4).
