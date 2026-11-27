@@ -1,0 +1,26 @@
+{
+  "train": {
+    "quiet_blocks": 203,
+    "moderate": 203,
+    "intense": 80,
+    "superintense": 8,
+    "hours": 131496,
+    "hours_without_unit": 0
+  },
+  "calib": {
+    "quiet_blocks": 136,
+    "moderate": 129,
+    "intense": 26,
+    "superintense": 0,
+    "hours": 87648,
+    "hours_without_unit": 0
+  },
+  "test": {
+    "quiet_blocks": 82,
+    "moderate": 81,
+    "intense": 24,
+    "superintense": 2,
+    "hours": 52608,
+    "hours_without_unit": 0
+  }
+}
