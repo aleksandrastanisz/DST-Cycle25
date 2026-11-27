@@ -69,6 +69,25 @@ class FittedL:
     def predict(self, x: np.ndarray) -> np.ndarray:
         return _predict(self.net, self.scaler, x)
 
+    def save(self, path) -> None:
+        torch.save({
+            "state": self.net.state_dict(),
+            "n_channels": self.net.lstm.input_size,
+            "hidden": self.net.lstm.hidden_size,
+            "layers": self.net.lstm.num_layers,
+            "scaler": {k: np.asarray(v).tolist() for k, v in vars(self.scaler).items()},
+            "n_epochs": self.n_epochs,
+        }, path)
+
+
+def load(path) -> FittedL:
+    d = torch.load(path, weights_only=True)
+    net = Net(d["n_channels"], d["hidden"], d["layers"])
+    net.load_state_dict(d["state"])
+    s = d["scaler"]
+    scaler = Scaler(np.array(s["x_mean"]), np.array(s["x_std"]), float(s["y_mean"]), float(s["y_std"]))
+    return FittedL(net, scaler, d["n_epochs"], [])
+
 
 def _check(x: np.ndarray, y: np.ndarray | None = None) -> None:
     if x.ndim != 3 or np.isnan(x).any():

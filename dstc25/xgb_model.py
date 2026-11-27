@@ -39,6 +39,16 @@ class FittedX:
         d = xgb.DMatrix(x[self.features])
         return self.booster.predict(d, iteration_range=(0, self.n_trees))
 
+    def save(self, path) -> None:
+        """Save only the first n_trees trees, so a loaded model predicts the same."""
+        self.booster[: self.n_trees].save_model(str(path))
+
+
+def load(path) -> FittedX:
+    booster = xgb.Booster()
+    booster.load_model(str(path))
+    return FittedX(booster, booster.num_boosted_rounds(), list(booster.feature_names))
+
 
 def params(config: dict, seed: int) -> dict:
     return {**FIXED_PARAMS, **config, "seed": seed}
