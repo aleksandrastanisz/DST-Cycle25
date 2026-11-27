@@ -17,3 +17,6 @@ results/**/*.tmp
 
 # trained models (large; SHA-256 in results/final_models.json)
 models/
+
+# forecasts (large; SHA-256 in results/forecasts/*_summary.json)
+results/forecasts/*.parquet
