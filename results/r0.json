@@ -1,0 +1,40 @@
+{
+ "h1": {
+  "common_hours": 123906,
+  "hours": 131496,
+  "mse_common": {
+   "P": 20.2400448727261,
+   "E": 14.415210768146975,
+   "X": 16.978630953695692,
+   "L": 11.589796355502264
+  },
+  "check1": true,
+  "leak_mae": 0.40385717908514307,
+  "check2": true,
+  "shuffled_mse_x": 471.4378401783118,
+  "shuffled_mse_const": 471.4367741104319,
+  "shuffled_gain": -2.2613167627305586e-06,
+  "check3": true,
+  "e_corr": 0.9835049424535444,
+  "e_hours": 127786,
+  "check4b": true
+ },
+ "h6": {
+  "common_hours": 123901,
+  "hours": 131496,
+  "mse_common": {
+   "P": 170.00025019975627,
+   "E": 181.04647197589122,
+   "X": 113.85161354154864,
+   "L": 105.18648374544941
+  },
+  "check1": true,
+  "leak_mae": 0.6057178916148293,
+  "check2": true,
+  "shuffled_mse_x": 471.4230986042983,
+  "shuffled_mse_const": 471.43854909441626,
+  "shuffled_gain": 3.2773073283198784e-05,
+  "check3": true
+ },
+ "all_passed": true
+}
