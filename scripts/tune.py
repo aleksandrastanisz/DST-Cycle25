@@ -10,10 +10,7 @@ again with the same arguments.
 from __future__ import annotations
 
 import argparse
-import platform
-import subprocess
 import sys
-from datetime import datetime, timezone
 from pathlib import Path
 
 import pandas as pd
@@ -21,26 +18,9 @@ import pandas as pd
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 from dstc25 import tuning  # noqa: E402
+from dstc25.runinfo import session_info  # noqa: E402
 
 OUT = ROOT / "results" / "tuning"
-
-
-def git(*args: str) -> str:
-    return subprocess.run(["git", *args], cwd=ROOT, capture_output=True, text=True, check=True).stdout.strip()
-
-
-def session_info() -> dict:
-    import torch
-    import xgboost
-
-    return {
-        "started": datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
-        "commit": git("rev-parse", "HEAD"),
-        "uncommitted_changes": bool(git("status", "--porcelain", "--untracked-files=no")),
-        "python": platform.python_version(),
-        "xgboost": xgboost.__version__,
-        "torch": torch.__version__,
-    }
 
 
 def main() -> None:
