@@ -71,3 +71,16 @@ def test_align_finds_one_hour_shift():
     aligned, info = dd.align_kyoto(omni, kyoto)
     assert info["lag_hours"] == -1
     assert aligned.t_start.tolist() == t.tolist()
+
+
+def test_splits_are_disjoint_contiguous_and_as_in_protocol():
+    assert dd.SPLITS == {
+        "train": ("1995-01-01", "2009-12-31 23:00"),
+        "calib": ("2010-01-01", "2019-12-31 23:00"),
+        "test": ("2020-01-01", "2025-12-31 23:00"),
+    }
+    bounds = [(pd.Timestamp(lo, tz="UTC"), pd.Timestamp(hi, tz="UTC")) for lo, hi in dd.SPLITS.values()]
+    for (lo1, hi1), (lo2, hi2) in zip(bounds, bounds[1:]):
+        assert lo1 < hi1 < lo2 < hi2
+        assert lo2 - hi1 == pd.Timedelta(hours=1)  # no gap and no shared hour
+    assert bounds[0][0].year == dd.FIRST_YEAR and bounds[-1][1].year == dd.LAST_YEAR
