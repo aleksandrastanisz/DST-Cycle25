@@ -1,0 +1,294 @@
+{
+ "sessions": [
+  {
+   "started": "2026-11-27T07:11:56Z",
+   "commit": "0cf75a5657ca96015e8df59935b97eb6eabc4534",
+   "uncommitted_changes": false,
+   "python": "3.12.9",
+   "xgboost": "3.4.1",
+   "torch": "2.15.0+cpu"
+  }
+ ],
+ "models": {
+  "X_h1_seed42.json": {
+   "model": "X",
+   "horizon": 1,
+   "seed": 42,
+   "config": {
+    "max_depth": 6,
+    "learning_rate": 0.03,
+    "min_child_weight": 10
+   },
+   "iterations": 597,
+   "train_rows": 131495,
+   "session": 0,
+   "sha256": "81605e2c4a8c03293c4ceeb2398d8b5ea4907e3f3ebd8b37accf1cf3c6ff259d"
+  },
+  "X_h1_seed43.json": {
+   "model": "X",
+   "horizon": 1,
+   "seed": 43,
+   "config": {
+    "max_depth": 6,
+    "learning_rate": 0.03,
+    "min_child_weight": 10
+   },
+   "iterations": 597,
+   "train_rows": 131495,
+   "session": 0,
+   "sha256": "08766a6d536c2c1f2726e806561c2e851c537b336b1d9ca07e592e418965e2f0"
+  },
+  "X_h1_seed44.json": {
+   "model": "X",
+   "horizon": 1,
+   "seed": 44,
+   "config": {
+    "max_depth": 6,
+    "learning_rate": 0.03,
+    "min_child_weight": 10
+   },
+   "iterations": 597,
+   "train_rows": 131495,
+   "session": 0,
+   "sha256": "5f0c5aa87324c8fb19f3b2518ae997669d7fe53efa778e1e72e1efabff5d5ef2"
+  },
+  "X_h1_seed45.json": {
+   "model": "X",
+   "horizon": 1,
+   "seed": 45,
+   "config": {
+    "max_depth": 6,
+    "learning_rate": 0.03,
+    "min_child_weight": 10
+   },
+   "iterations": 597,
+   "train_rows": 131495,
+   "session": 0,
+   "sha256": "eb884dc86a11a43256c607362209d64034ba9270c10f3a726ae93672c3515cd0"
+  },
+  "X_h1_seed46.json": {
+   "model": "X",
+   "horizon": 1,
+   "seed": 46,
+   "config": {
+    "max_depth": 6,
+    "learning_rate": 0.03,
+    "min_child_weight": 10
+   },
+   "iterations": 597,
+   "train_rows": 131495,
+   "session": 0,
+   "sha256": "fba0999756bfee0b6bcbe40776d57a871e7ecaa47f0ab59137ce14f91933eb1d"
+  },
+  "X_h6_seed42.json": {
+   "model": "X",
+   "horizon": 6,
+   "seed": 42,
+   "config": {
+    "max_depth": 4,
+    "learning_rate": 0.03,
+    "min_child_weight": 1
+   },
+   "iterations": 180,
+   "train_rows": 131490,
+   "session": 0,
+   "sha256": "94ae25663d3a04a5575cd407ab82b7dbf2b4b583e967255b030a308e89ff50cd"
+  },
+  "X_h6_seed43.json": {
+   "model": "X",
+   "horizon": 6,
+   "seed": 43,
+   "config": {
+    "max_depth": 4,
+    "learning_rate": 0.03,
+    "min_child_weight": 1
+   },
+   "iterations": 180,
+   "train_rows": 131490,
+   "session": 0,
+   "sha256": "058fca7e86cef625870bd96cf8cbcc6f2af88d9c7050b451e79593fa1a597117"
+  },
+  "X_h6_seed44.json": {
+   "model": "X",
+   "horizon": 6,
+   "seed": 44,
+   "config": {
+    "max_depth": 4,
+    "learning_rate": 0.03,
+    "min_child_weight": 1
+   },
+   "iterations": 180,
+   "train_rows": 131490,
+   "session": 0,
+   "sha256": "dab8ec14e94ede842cf93ce311f67b94e86e583c1bc08d24e56a847bba98c144"
+  },
+  "X_h6_seed45.json": {
+   "model": "X",
+   "horizon": 6,
+   "seed": 45,
+   "config": {
+    "max_depth": 4,
+    "learning_rate": 0.03,
+    "min_child_weight": 1
+   },
+   "iterations": 180,
+   "train_rows": 131490,
+   "session": 0,
+   "sha256": "dc37c94fe2453ac0e64eca1c12f25a4f691766b9378a6a3fb7dbc13062c7c12f"
+  },
+  "X_h6_seed46.json": {
+   "model": "X",
+   "horizon": 6,
+   "seed": 46,
+   "config": {
+    "max_depth": 4,
+    "learning_rate": 0.03,
+    "min_child_weight": 1
+   },
+   "iterations": 180,
+   "train_rows": 131490,
+   "session": 0,
+   "sha256": "413cbaa12ef0e78c6de8da2dcdaf84faf3f77d3af7ab304e5c1ada6767ab2c6f"
+  },
+  "L_h1_seed42.pt": {
+   "model": "L",
+   "horizon": 1,
+   "seed": 42,
+   "config": {
+    "hidden": 128,
+    "lr": 0.001,
+    "layers": 1
+   },
+   "iterations": 9,
+   "train_rows": 123906,
+   "session": 0,
+   "sha256": "2d6a50d19a79f0400732ad63127dc150c9384efc98de84499e841bad25e0fdfb"
+  },
+  "L_h1_seed43.pt": {
+   "model": "L",
+   "horizon": 1,
+   "seed": 43,
+   "config": {
+    "hidden": 128,
+    "lr": 0.001,
+    "layers": 1
+   },
+   "iterations": 9,
+   "train_rows": 123906,
+   "session": 0,
+   "sha256": "844bccbc7f7a194de0c8a31afd2a2dc128a486b6b73f8ca2c047e702a1774c44"
+  },
+  "L_h1_seed44.pt": {
+   "model": "L",
+   "horizon": 1,
+   "seed": 44,
+   "config": {
+    "hidden": 128,
+    "lr": 0.001,
+    "layers": 1
+   },
+   "iterations": 9,
+   "train_rows": 123906,
+   "session": 0,
+   "sha256": "70719669db6fe0489126ea64ee1e6983b16da588e34d4bc84a6e0fa17ba7a89a"
+  },
+  "L_h1_seed45.pt": {
+   "model": "L",
+   "horizon": 1,
+   "seed": 45,
+   "config": {
+    "hidden": 128,
+    "lr": 0.001,
+    "layers": 1
+   },
+   "iterations": 9,
+   "train_rows": 123906,
+   "session": 0,
+   "sha256": "bdebaca8e79ad0248ef0744d4eccc26987fabac3b98a39c2aae126e7a321eb26"
+  },
+  "L_h1_seed46.pt": {
+   "model": "L",
+   "horizon": 1,
+   "seed": 46,
+   "config": {
+    "hidden": 128,
+    "lr": 0.001,
+    "layers": 1
+   },
+   "iterations": 9,
+   "train_rows": 123906,
+   "session": 0,
+   "sha256": "cf2c354e0d78c79b869296d9a4a3d97e7de06052522db20e56a27ade06aca6fe"
+  },
+  "L_h6_seed42.pt": {
+   "model": "L",
+   "horizon": 6,
+   "seed": 42,
+   "config": {
+    "hidden": 128,
+    "lr": 0.001,
+    "layers": 2
+   },
+   "iterations": 3,
+   "train_rows": 123901,
+   "session": 0,
+   "sha256": "6c8175ea492523901720f8def06df85475cd5f9f11378e55585ece2623c6ad4f"
+  },
+  "L_h6_seed43.pt": {
+   "model": "L",
+   "horizon": 6,
+   "seed": 43,
+   "config": {
+    "hidden": 128,
+    "lr": 0.001,
+    "layers": 2
+   },
+   "iterations": 3,
+   "train_rows": 123901,
+   "session": 0,
+   "sha256": "1c0a26c5969a00044d76a857794f77c2104d306288bf1e8dbad6d9b674d595d3"
+  },
+  "L_h6_seed44.pt": {
+   "model": "L",
+   "horizon": 6,
+   "seed": 44,
+   "config": {
+    "hidden": 128,
+    "lr": 0.001,
+    "layers": 2
+   },
+   "iterations": 3,
+   "train_rows": 123901,
+   "session": 0,
+   "sha256": "9efa513caec7fd17f73f6b542f1e92ddebd717e37535050955d6ac22bd31aa80"
+  },
+  "L_h6_seed45.pt": {
+   "model": "L",
+   "horizon": 6,
+   "seed": 45,
+   "config": {
+    "hidden": 128,
+    "lr": 0.001,
+    "layers": 2
+   },
+   "iterations": 3,
+   "train_rows": 123901,
+   "session": 0,
+   "sha256": "487d3395b6b3f87ffe75c9de1d50881a3476cbb6c7eeda4fa65e3d7688ed326f"
+  },
+  "L_h6_seed46.pt": {
+   "model": "L",
+   "horizon": 6,
+   "seed": 46,
+   "config": {
+    "hidden": 128,
+    "lr": 0.001,
+    "layers": 2
+   },
+   "iterations": 3,
+   "train_rows": 123901,
+   "session": 0,
+   "sha256": "4eaa51346c41fad649e0822930d41f166136748404b50d7c8e1eefdd868c7c7b"
+  }
+ }
+}
