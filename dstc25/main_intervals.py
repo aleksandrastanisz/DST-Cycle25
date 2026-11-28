@@ -25,8 +25,9 @@ def residual_rows(t_issue: pd.Series, h: int, common: np.ndarray, calib_end: pd.
 def run(t_issue: pd.Series, y: np.ndarray, forecast: np.ndarray, dst_t: np.ndarray, common: np.ndarray,
         is_test: np.ndarray, h: int, calib_end: pd.Timestamp, merged_into: list[int],
         alpha: float = intervals.ALPHA, methods=METHODS) -> dict:
-    """Half-width q and coverage (1/0) of each method, per row; NaN outside test rows of the
-    common set. Also the number of test rows with an infinite or empty adaptive interval."""
+    """Half-width q and coverage (1/0) of each method, per row; NaN outside the evaluated rows
+    (is_test: rows whose target hour lies in the test period) of the common set. Also the number
+    of evaluated rows with an infinite or empty adaptive interval."""
     common = np.asarray(common, bool)
     is_test = np.asarray(is_test, bool)
     score = np.abs(np.asarray(y, float) - np.asarray(forecast, float))

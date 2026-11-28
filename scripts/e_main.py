@@ -125,9 +125,12 @@ def main() -> None:
 
     unit_hours_t = u_t.set_index("unit")["n_hours"]
     unit_hours_c = u_c.set_index("unit")["n_hours"]
-    ft = f[is_test].reset_index(drop=True)
     test_tables, calib_tables, summary_metrics, interval_info, all_rows = {}, {}, {}, {}, []
     for h in HORIZONS:
+        # a forecast belongs to the test period by its target hour (section 6, item 4), so the
+        # last h forecasts issued in calib are evaluated too
+        is_eval = np.asarray(f["t_start"] + pd.Timedelta(hours=h) >= test_lo)
+        ft = f[is_eval].reset_index(drop=True)
         a = units.for_forecasts(ft["t_start"], h, hours_t)
         common_t = ft[f"common_h{h}"].to_numpy()
         y = ft[f"y_h{h}"].to_numpy()
@@ -143,11 +146,11 @@ def main() -> None:
             values = {"se_m": rows.se_m, "se_p": rows.se_p, "se_e": rows.se_e}
             if m in INTERVAL_MODELS:
                 run = main_intervals.run(f["t_start"], f[f"y_h{h}"].to_numpy(), f[f"{m}_h{h}"].to_numpy(),
-                                         f["dst_t"].to_numpy(), f[f"common_h{h}"].to_numpy(), is_test, h,
+                                         f["dst_t"].to_numpy(), f[f"common_h{h}"].to_numpy(), is_eval, h,
                                          calib_end, merged[f"h{h}"]["merged_into"])
                 for meth in METHODS:
-                    rows[f"q_{meth}"] = run[meth]["q"][is_test]
-                    rows[f"cov_{meth}"] = run[meth]["covered"][is_test]
+                    rows[f"q_{meth}"] = run[meth]["q"][is_eval]
+                    rows[f"cov_{meth}"] = run[meth]["covered"][is_eval]
                     values[f"cov_{meth}"] = rows[f"cov_{meth}"]
                 interval_info[f"{m}_h{h}"] = {meth: {"n_infinite": run[meth]["n_infinite"], "n_empty": run[meth]["n_empty"]}
                                               for meth in METHODS if meth not in ("split", "mond")}
@@ -176,7 +179,7 @@ def main() -> None:
         dec["H3"][k]["permutation_disagrees"] = bool(
             (dec["H3"][k]["p_holm"] < 0.05) != (dec["H3"][k]["p_permutation"] < 0.05))
     fragile = decisions.fragility(test_tables, calib_tables, ids, counts, dec)
-    caveat_m10 = {k: v["intense"]["M10_hours_excluded"] > M10_CAVEAT for k, v in summary_metrics.items()}
+    caveat_m10 = {k: bool(v["intense"]["M10_hours_excluded"] > M10_CAVEAT) for k, v in summary_metrics.items()}
 
     rows_all = pd.concat(all_rows, ignore_index=True)
     rows_path = ROOT / "results" / "forecasts" / "test_rows.parquet"
